@@ -79,9 +79,3 @@ _Avoid_: Screenshot, graph, chart
 **Share link**:
 A URL of the web app whose fragment holds a trail spec, so that opening it shows the same trail image.
 _Avoid_: Permalink, short link
-
-## Pull requests
-
-**Assets branch**:
-The single branch in a target repository that stores the trail images, trace files and trail specs for all of its pull requests, one folder per pull request.
-_Avoid_: Image branch, gh-pages

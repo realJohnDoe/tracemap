@@ -2,8 +2,8 @@
 export const COLOR_NAMES = ['blue', 'red', 'green', 'orange', 'purple', 'gray'] as const
 export type ColorName = (typeof COLOR_NAMES)[number]
 
-/** Only the light theme exists for now; dark is added with its own palette. */
-export type Theme = 'light'
+/** Light or dark rendering of the whole image (ADR-0006). */
+export type Theme = 'light' | 'dark'
 
 /** One tree with one trace's highlight (ADR-0004). */
 export interface Panel {
@@ -22,13 +22,13 @@ export interface Panel {
 
 /** The complete description of one trail image (ADR-0003). */
 export interface TrailSpec {
-  /** Two panels are side by side (ADR-0005), which is not rendered yet. */
+  /** Two panels are drawn side by side on the same tree (ADR-0005). */
   panels: [Panel] | [Panel, Panel]
   /** Defaults to light. */
   theme?: Theme
 }
 
-interface Palette {
+export interface Palette {
   background: string
   ink: string
   neutralLine: string
@@ -50,6 +50,19 @@ export const PALETTES: Record<Theme, Palette> = {
       orange: '#c2410c',
       purple: '#7e22ce',
       gray: '#111827',
+    },
+  },  dark: {
+    background: '#0d1117',
+    ink: '#e6edf3',
+    neutralLine: '#30363d',
+    neutralLabel: '#7d8590',
+    colors: {
+      blue: '#60a5fa',
+      red: '#f87171',
+      green: '#4ade80',
+      orange: '#fb923c',
+      purple: '#c084fc',
+      gray: '#f3f4f6',
     },
   },
 }

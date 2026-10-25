@@ -53,6 +53,26 @@ describe('tracetrail render against the core golden SVGs', () => {
     })
   }
 
+  it('draws --dark-mode like the dark golden SVGs', () => {
+    const o = out()
+    expect(run('render', exampleFile, '--title', 'Authentication', '--highlight', '4-9', '--dark-mode', '-o', o).code).toBe(0)
+    expect(readFileSync(o, 'utf8')).toBe(golden('dark-interval'))
+  })
+
+  for (const color of COLOR_NAMES) {
+    it(`draws --dark-mode --color ${color}`, () => {
+      const o = out()
+      expect(run('render', fixture('revisit.trace'), '--color', color, '--highlight', '2-4', '--dark-mode', '-o', o).code).toBe(0)
+      expect(readFileSync(o, 'utf8')).toBe(golden(`dark-color-${color}`))
+    })
+  }
+
+  it('applies --dark-mode to a --spec', () => {
+    const o = out()
+    expect(run('render', '--spec', specFile({ panels: [{ trace: EXAMPLE }] }), '--dark-mode', '-o', o).code).toBe(0)
+    expect(readFileSync(o, 'utf8')).toBe(renderTrail({ panels: [{ trace: EXAMPLE }], theme: 'dark' }) + '\n')
+  })
+
   it('renders --spec byte-identically to core', () => {
     const spec: TrailSpec = { panels: [{ trace: EXAMPLE, title: 'Authentication', color: 'red', highlight: [4, 9] }] }
     const o = out()
@@ -65,6 +85,46 @@ describe('tracetrail render against the core golden SVGs', () => {
     run('render', exampleFile, '--title', 'T', '--color', 'purple', '--highlight', '3-6', '-o', a)
     run('render', '--spec', specFile({ panels: [{ trace: EXAMPLE, title: 'T', color: 'purple', highlight: [3, 6] }] }), '-o', b)
     expect(readFileSync(a, 'utf8')).toBe(readFileSync(b, 'utf8'))
+  })
+})
+
+const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+
+describe('tracetrail render --png', () => {
+  it('writes a PNG with --png, even to a path without the extension', () => {
+    const o = join(tmp, `img${n++}`)
+    const r = run('render', exampleFile, '--png', '-o', o)
+    expect(r.stderr).toBe('')
+    expect(r.code).toBe(0)
+    expect(readFileSync(o).subarray(0, 8).equals(PNG_MAGIC)).toBe(true)
+  })
+
+  it('writes a PNG when the output path ends in .png', () => {
+    const o = join(tmp, `img${n++}.png`)
+    expect(run('render', exampleFile, '--dark-mode', '-o', o).code).toBe(0)
+    expect(readFileSync(o).subarray(0, 8).equals(PNG_MAGIC)).toBe(true)
+  })
+
+  it('draws text: the PNG is larger than one of a trace with no labels would be', () => {
+    const o = out().replace(/\.svg$/, '.png')
+    run('render', exampleFile, '-o', o)
+    expect(readFileSync(o).length).toBeGreaterThan(5000)
+  })
+})
+
+describe('tracetrail compare --dark-mode and --png', () => {
+  const left = fixture('bug-fix-before.trace'), right = fixture('bug-fix-after.trace')
+
+  it('draws --dark-mode like the dark golden SVG', () => {
+    const o = out()
+    expect(run('compare', left, right, '--dark-mode', '-o', o).code).toBe(0)
+    expect(readFileSync(o, 'utf8')).toBe(golden('dark-compare-bug-fix'))
+  })
+
+  it('writes a PNG with --png', () => {
+    const o = join(tmp, `cmp${n++}.png`)
+    expect(run('compare', left, right, '--png', '-o', o).code).toBe(0)
+    expect(readFileSync(o).subarray(0, 8).equals(PNG_MAGIC)).toBe(true)
   })
 })
 
@@ -106,11 +166,69 @@ describe('tracetrail render errors', () => {
   })
 })
 
+describe('tracetrail compare against the core golden SVGs', () => {
+  it('draws two panels side by side, titled before and after by default', () => {
+    const o = out()
+    expect(run('compare', fixture('bug-fix-before.trace'), fixture('bug-fix-after.trace'), '-o', o).code).toBe(0)
+    expect(readFileSync(o, 'utf8')).toBe(golden('compare-bug-fix'))
+  })
+
+  it('applies the per-side flags', () => {
+    const o = out()
+    const r = run('compare', fixture('disjoint-left.trace'), fixture('disjoint-right.trace'),
+      '--left-title', 'legacy', '--left-color', 'purple', '--left-highlight', '2-3',
+      '--right-title', 'rewrite', '--right-color', 'purple', '--right-highlight', '1', '-o', o)
+    expect(r.code).toBe(0)
+    expect(readFileSync(o, 'utf8')).toBe(golden('compare-disjoint'))
+  })
+
+  it('renders the same SVG from compare flags and from a two-panel --spec', () => {
+    const a = out(), b = out()
+    const left = readFileSync(fixture('bug-fix-before.trace'), 'utf8'), right = readFileSync(fixture('bug-fix-after.trace'), 'utf8')
+    run('compare', fixture('bug-fix-before.trace'), fixture('bug-fix-after.trace'),
+      '--left-highlight', '2-4', '--right-color', 'green', '--right-title', '', '-o', a)
+    const spec: TrailSpec = { panels: [{ trace: left, title: 'before', highlight: [2, 4] }, { trace: right, color: 'green' }] }
+    expect(run('render', '--spec', specFile(spec), '-o', b).code).toBe(0)
+    expect(readFileSync(a, 'utf8')).toBe(readFileSync(b, 'utf8'))
+    expect(readFileSync(b, 'utf8')).toBe(renderTrail(spec) + '\n')
+  })
+})
+
+describe('tracetrail compare errors', () => {
+  const fails = (expected: RegExp, code: number, ...args: string[]) => {
+    const r = run(...args)
+    expect(r.code).toBe(code)
+    expect(r.stderr).toMatch(expected)
+  }
+  const L = fixture('simple.trace'), R = fixture('revisit.trace')
+
+  it('names the side of an invalid flag', () => {
+    fails(/Right: Unknown color "pink"/, 1, 'compare', L, R, '--right-color', 'pink', '-o', out())
+    fails(/Malformed --left-highlight "x"/, 1, 'compare', L, R, '--left-highlight', 'x', '-o', out())
+    fails(/Left: Highlight 1-9 is out of range: the trace has 3 steps/, 1, 'compare', L, R, '--left-highlight', '1-9', '-o', out())
+    fails(/Cannot read right trace file/, 1, 'compare', L, join(tmp, 'nope.trace'), '-o', out())
+  })
+  it('needs both traces and -o', () => {
+    fails(/missing required argument 'right'/, 2, 'compare', L, '-o', out())
+    fails(/required option '-o, --output <file>'/, 2, 'compare', L, R)
+    fails(/Only one of LEFT and RIGHT/, 2, 'compare', '-', '-', '-o', out())
+  })
+})
+
 describe('tracetrail --help', () => {
   it('documents every flag with an example', () => {
     const r = run('render', '--help')
     expect(r.code).toBe(0)
     for (const s of ['--title', '--color', '--highlight', '--spec', '-o, --output', 'Examples:', ...COLOR_NAMES]) expect(r.stdout).toContain(s)
+  })
+
+  it('documents every compare flag', () => {
+    const r = run('compare', '--help')
+    expect(r.code).toBe(0)
+    for (const side of ['left', 'right']) for (const f of ['title', 'color', 'highlight']) expect(r.stdout).toContain(`--${side}-${f}`)
+    expect(r.stdout).toContain('"before"')
+    expect(r.stdout).toContain('"after"')
+    expect(r.stdout).toContain('side by side')
   })
 
   it('points the top-level help at render', () => {

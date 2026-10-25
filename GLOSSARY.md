@@ -75,9 +75,3 @@ _Avoid_: Config, options, settings
 **Trail image**:
 The rendered result of a trail spec, as SVG or PNG.
 _Avoid_: Screenshot, graph, chart
-
-## Pull requests
-
-**Assets branch**:
-The single branch in a target repository that stores the trail images, trace files and trail specs for all of its pull requests, one folder per pull request.
-_Avoid_: Image branch, gh-pages

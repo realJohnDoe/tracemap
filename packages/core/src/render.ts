@@ -7,7 +7,7 @@ const CORNER = 6
 // space between two panels side by side, with a neutral divider in its middle
 const GAP = 32
 
-const FONT = "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace"
+export const FONT_FAMILY = "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace"
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 const px = (n: number) => Math.round(n * 10) / 10
@@ -208,7 +208,7 @@ export function renderTrail(spec: TrailSpec): string {
   }
 
   const o: string[] = []
-  o.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="${FONT}" font-size="13" role="img" aria-label="${esc(label)}">`)
+  o.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="${FONT_FAMILY}" font-size="13" role="img" aria-label="${esc(label)}">`)
   o.push(`<rect width="${W}" height="${H}" fill="${pal.background}"/>`)
   o.push(...drawn[0].body)
   if (drawn.length > 1) {

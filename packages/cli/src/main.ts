@@ -1,5 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
+import { extname } from 'node:path'
 import { Command, CommanderError } from 'commander'
+import { svgToPng } from './png'
 import { COLOR_NAMES, parseTrace, renderTrail, type ColorName, type Panel, type TrailSpec } from '@tracetrail/core'
 
 const EXAMPLES = `
@@ -7,7 +9,10 @@ Examples:
   tracetrail render login.trace -o login.svg
   tracetrail render login.trace --title "Authentication" --color green --highlight 4-9 -o auth.svg
   tracetrail render --spec trail.json -o out.svg
+  tracetrail render login.trace --dark-mode -o login-dark.svg
+  tracetrail render login.trace --png -o login.png
   tracetrail compare old.trace new.trace --right-highlight 2-5 -o fix.svg
+  tracetrail compare old.trace new.trace --dark-mode --png -o fix.png
 
 A trace file has one step per line, in order, naming a file or a directory (ending
 in "/"). Text after " # " is a note. Blank lines and lines starting with "#" are
@@ -83,15 +88,14 @@ function specFromJson(text: string): TrailSpec {
   return spec as TrailSpec
 }
 
-interface RenderOptions {
+interface RenderOptions extends OutputOptions {
   title?: string
   color?: string
   highlight?: string
   spec?: string
-  output: string
 }
 
-function render(trace: string | undefined, opts: RenderOptions): void {
+async function render(trace: string | undefined, opts: RenderOptions): Promise<void> {
   let spec: TrailSpec
   if (opts.spec !== undefined) {
     if (trace !== undefined || opts.title !== undefined || opts.color !== undefined || opts.highlight !== undefined) {
@@ -108,30 +112,45 @@ function render(trace: string | undefined, opts: RenderOptions): void {
     spec = { panels: [panel] }
   }
 
-  write(spec, opts.output)
+  await write(spec, opts)
 }
 
-function write(spec: TrailSpec, output: string): void {
+interface OutputOptions {
+  darkMode?: boolean
+  png?: boolean
+  output: string
+}
+
+/** Renders the trail spec and writes it as SVG, or as PNG for --png or a .png output path. */
+async function write(spec: TrailSpec, opts: OutputOptions): Promise<void> {
+  if (opts.darkMode) spec = { ...spec, theme: 'dark' }
   let svg: string
   try {
     svg = renderTrail(spec)
   } catch (e) {
     throw new CliError((e as Error).message)
   }
-  writeFileSync(output, svg + '\n')
+  if (opts.png || extname(opts.output).toLowerCase() === '.png') {
+    try {
+      writeFileSync(opts.output, await svgToPng(svg))
+    } catch (e) {
+      throw new CliError((e as Error).message)
+    }
+    return
+  }
+  writeFileSync(opts.output, svg + '\n')
 }
 
-interface CompareOptions {
+interface CompareOptions extends OutputOptions {
   leftTitle: string
   leftColor?: string
   leftHighlight?: string
   rightTitle: string
   rightColor?: string
   rightHighlight?: string
-  output: string
 }
 
-function compare(left: string, right: string, opts: CompareOptions): void {
+async function compare(left: string, right: string, opts: CompareOptions): Promise<void> {
   if (left === '-' && right === '-') throw new CliError('Only one of LEFT and RIGHT can read stdin', 2)
   const side = (file: string, name: 'left' | 'right', title: string, color?: string, highlight?: string): Panel => {
     const panel: Panel = { trace: read(file, `${name} trace file`) }
@@ -141,12 +160,12 @@ function compare(left: string, right: string, opts: CompareOptions): void {
     checkPanel(panel, name === 'left' ? 'Left: ' : 'Right: ')
     return panel
   }
-  write({
+  await write({
     panels: [
       side(left, 'left', opts.leftTitle, opts.leftColor, opts.leftHighlight),
       side(right, 'right', opts.rightTitle, opts.rightColor, opts.rightHighlight),
     ],
-  }, opts.output)
+  }, opts)
 }
 
 function buildProgram(): Command {
@@ -162,13 +181,15 @@ function buildProgram(): Command {
 
   program
     .command('render')
-    .description('Render a trace file, or a trail spec, to an SVG file.')
+    .description('Render a trace file, or a trail spec, to an SVG or PNG file.')
     .argument('[trace]', 'trace file, one step per line; "-" reads stdin')
     .option('--title <text>', 'title drawn above the tree')
     .option('--color <color>', `highlight color: ${COLOR_NAMES.join(', ')} (default: blue)`)
     .option('--highlight <N|A-B>', 'steps drawn in color, 1-based: "3" for one step, "2-5" for a range (default: whole trace)')
     .option('--spec <file>', 'read a trail spec as JSON instead of TRACE and the flags above; "-" reads stdin')
-    .requiredOption('-o, --output <file>', 'where to write the SVG')
+    .option('--dark-mode', 'render the dark theme instead of the light one')
+    .option('--png', 'write a PNG instead of an SVG (also chosen by an output path ending in .png); needs a monospace font installed')
+    .requiredOption('-o, --output <file>', 'where to write the image')
     .addHelpText('after', EXAMPLES)
     .action(render)
 
@@ -185,7 +206,9 @@ function buildProgram(): Command {
     .option('--right-title <text>', 'title above the right panel; "" for none', 'after')
     .option('--right-color <color>', `right highlight color: ${colors}`)
     .option('--right-highlight <N|A-B>', `right steps drawn in color, ${steps}`)
-    .requiredOption('-o, --output <file>', 'where to write the SVG')
+    .option('--dark-mode', 'render the dark theme instead of the light one')
+    .option('--png', 'write a PNG instead of an SVG (also chosen by an output path ending in .png); needs a monospace font installed')
+    .requiredOption('-o, --output <file>', 'where to write the image')
     .addHelpText('after', EXAMPLES)
     .action(compare)
 
@@ -200,7 +223,7 @@ export async function main(argv: string[]): Promise<number> {
     return 2
   }
   try {
-    program.parse(argv, { from: 'user' })
+    await program.parseAsync(argv, { from: 'user' })
     return 0
   } catch (e) {
     if (e instanceof CliError) {

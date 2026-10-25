@@ -1,4 +1,4 @@
-export { renderTrail } from './render'
+export { FONT_FAMILY, renderTrail } from './render'
 export { COLOR_NAMES } from './spec'
 export type { ColorName, Panel, Theme, TrailSpec } from './spec'
 export { EXAMPLE, parseTrace } from './trace'

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { COLOR_NAMES, EXAMPLE, parseTrace, renderTrail, type ColorName, type Panel, type TrailSpec } from '@tracetrail/core'
+import { COLOR_NAMES, EXAMPLE, parseTrace, renderTrail, type ColorName, type Panel, type Theme, type TrailSpec } from '@tracetrail/core'
 import { download, serializeSvg, svgToPngBlob } from './lib/export'
 
 const btn = 'cursor-pointer rounded-md border border-line bg-panel px-3 py-[5px] text-[13px] text-ink hover:border-trail'
@@ -76,6 +76,7 @@ export default function App() {
   const [highlight, setHighlight] = useState<[number, number] | null>(null)
   const [color, setColor] = useState<ColorName>('blue')
   const [title, setTitle] = useState('')
+  const [theme, setTheme] = useState<Theme>('light')
   const [playing, setPlaying] = useState(false)
   const [status, setStatus] = useState('')
   const [svgSource, setSvgSource] = useState<string | null>(null)
@@ -89,9 +90,9 @@ export default function App() {
 
   const spec: TrailSpec = useMemo(
     () => mode === 'compare'
-      ? { panels: [toPanel(sides[0]), toPanel(sides[1])] }
-      : { panels: [{ trace: text, title: title || undefined, color, highlight: highlight ?? undefined }] },
-    [mode, sides, text, title, color, highlight],
+      ? { panels: [toPanel(sides[0]), toPanel(sides[1])], theme }
+      : { panels: [{ trace: text, title: title || undefined, color, highlight: highlight ?? undefined }], theme },
+    [mode, sides, text, title, color, highlight, theme],
   )
   const svg = useMemo(() => renderTrail(spec), [spec])
 
@@ -182,6 +183,10 @@ export default function App() {
         <div className="mt-1 flex gap-2" role="group" aria-label="Mode">
           {modeBtn('single', 'Single trace')}
           {modeBtn('compare', 'Compare')}
+          <label className="ml-auto flex cursor-pointer items-center gap-2 text-[13px] text-ink">
+            <input type="checkbox" checked={theme === 'dark'} onChange={(e) => setTheme(e.target.checked ? 'dark' : 'light')} />
+            Dark theme
+          </label>
         </div>
       </header>
 

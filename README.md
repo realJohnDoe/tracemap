@@ -1,12 +1,12 @@
 # Trace Trail
 
-Follows a trace through a directory tree, step by step. Built with [Vite+](https://viteplus.dev), React, TypeScript and Tailwind CSS v4.
+Draws the route a trace takes through a directory tree, with one highlighted interval of steps. Built with [Vite+](https://viteplus.dev), React, TypeScript and Tailwind CSS v4.
 
 ## Layout
 
 An npm workspaces monorepo (see [ADR-0001](./docs/adr/0001-workspaces-with-shared-core-and-cli-only-on-npm.md)):
 
-- `packages/core`: private `@tracetrail/core`. Parsing, tree layout and SVG rendering, with no DOM dependency. Its public function `renderTrace` takes trace file text and returns SVG, and is tested against golden SVG fixtures in `packages/core/test/fixtures/`.
+- `packages/core`: private `@tracetrail/core`. Parsing, tree layout and SVG rendering, with no DOM dependency. Its public interface is the trail spec type and `renderTrail`, which takes a trail spec and returns SVG; it is tested against golden SVG fixtures in `packages/core/test/fixtures/`.
 - `apps/web`: the React web app. Browser-only helpers (SVG/PNG export, clipboard) live here.
 
 ## Commands

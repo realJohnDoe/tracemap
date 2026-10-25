@@ -1,8 +1,6 @@
-/** Inline the CSS variables so the SVG renders standalone, outside the page. */
+/** Core's SVG uses plain colors, so it already renders standalone outside the page. */
 export function serializeSvg(svg: SVGSVGElement): string {
-  const cs = getComputedStyle(document.documentElement)
-  return '<?xml version="1.0" encoding="UTF-8"?>\n' +
-    svg.outerHTML.replace(/var\((--[\w-]+)\)/g, (_m, n: string) => cs.getPropertyValue(n).trim() || '#000')
+  return '<?xml version="1.0" encoding="UTF-8"?>\n' + svg.outerHTML
 }
 
 export function download(name: string, href: string) {

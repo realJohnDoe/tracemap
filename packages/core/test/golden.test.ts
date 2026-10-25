@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vite-plus/test'
-import { EXAMPLE, renderTrace, type RenderOptions } from '../src'
+import { COLOR_NAMES, EXAMPLE, renderTrail, type Panel } from '../src'
 
 const dir = (f: string) => fileURLToPath(new URL(`./fixtures/${f}`, import.meta.url))
 const read = (f: string) => readFileSync(dir(f), 'utf8')
@@ -9,16 +9,20 @@ const read = (f: string) => readFileSync(dir(f), 'utf8')
 // Set UPDATE_GOLDEN=1 to regenerate the committed SVG fixtures after an intended rendering change.
 const update = !!process.env.UPDATE_GOLDEN
 
-const cases: { name: string; trace: () => string; options: RenderOptions }[] = [
-  { name: 'simple', trace: () => read('simple.trace'), options: { step: 1 } },
-  { name: 'revisit', trace: () => read('revisit.trace'), options: { step: 3, trail: 2, showAll: false } },
-  { name: 'example', trace: () => EXAMPLE, options: { step: 5 } },
+const one = (panel: Panel) => renderTrail({ panels: [panel] })
+
+const cases: { name: string; panel: () => Panel }[] = [
+  { name: 'no-highlight', panel: () => ({ trace: EXAMPLE }) },
+  { name: 'interval', panel: () => ({ trace: EXAMPLE, highlight: [4, 9], title: 'Authentication' }) },
+  { name: 'single-step', panel: () => ({ trace: read('simple.trace'), highlight: [2, 2] }) },
+  { name: 'repeated-visits', panel: () => ({ trace: read('revisit.trace'), highlight: [1, 4] }) },
+  ...COLOR_NAMES.map((color) => ({ name: `color-${color}`, panel: (): Panel => ({ trace: read('revisit.trace'), color, highlight: [2, 4] }) })),
 ]
 
-describe('renderTrace against golden SVGs', () => {
+describe('renderTrail against golden SVGs', () => {
   for (const c of cases) {
     it(c.name, () => {
-      const svg = renderTrace(c.trace(), c.options)
+      const svg = one(c.panel())
       const file = dir(`${c.name}.svg`)
       if (update) writeFileSync(file, svg + '\n')
       expect(svg + '\n').toBe(readFileSync(file, 'utf8'))
@@ -26,6 +30,12 @@ describe('renderTrace against golden SVGs', () => {
   }
 
   it('returns an empty string for an empty trace', () => {
-    expect(renderTrace('# only a comment\n')).toBe('')
+    expect(one({ trace: '# only a comment\n' })).toBe('')
+  })
+
+  it('clamps the highlight to the trace and accepts it in either order', () => {
+    const trace = read('simple.trace')
+    expect(one({ trace, highlight: [9, 2] })).toBe(one({ trace, highlight: [2, 3] }))
+    expect(one({ trace, highlight: [-5, 99] })).toBe(one({ trace }))
   })
 })

@@ -78,6 +78,7 @@ packages/cli/src/main.ts           # The SVG is written to --output
 Guidelines:
 
 - Trace **one run of behaviour**, in the order it executes, not the list of changed files. Read the code to follow the flow; include unchanged files the flow passes through when they help orientation.
+- A trace can also be recorded instead of read from the code, for example by running the tests the PR touches under a tracer. If the repo's `CLAUDE.md`/`AGENTS.md` describes a way, use it; otherwise you may devise one (a tracer such as `sys.settrace`, temporary logging), as long as it leaves no changes in the working tree and the result is better than reading the code. A recorded trace is raw material. Before rendering, keep only paths in the repo (drop the standard library, dependencies and test framework internals), merge repeated steps that follow each other, cut it to the part the PR is about, and add notes. The same limits apply as for a hand-written trace.
 - Write a short note on each step saying what happens there. The renderer does not draw notes yet, but they document the trace while you write it and the captions can draw on them.
 - Aim for 4–15 steps per image. Revisiting a file is fine and shows up as two step numbers.
 - To show files that matter but are not part of the flow (a new test, a fixture), append them after a comment line and leave them outside the highlight.

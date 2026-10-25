@@ -1,0 +1,162 @@
+import { readFileSync, writeFileSync } from 'node:fs'
+import { Command, CommanderError } from 'commander'
+import { COLOR_NAMES, parseTrace, renderTrail, type ColorName, type Panel, type TrailSpec } from '@tracetrail/core'
+
+const EXAMPLES = `
+Examples:
+  tracetrail render login.trace -o login.svg
+  tracetrail render login.trace --title "Authentication" --color green --highlight 4-9 -o auth.svg
+  tracetrail render --spec trail.json -o out.svg
+
+A trace file has one step per line, in order, naming a file or a directory (ending
+in "/"). Text after " # " is a note. Blank lines and lines starting with "#" are
+ignored.
+
+A trail spec is JSON, for example:
+  {"panels": [{"trace": "src/a.ts # start\\nsrc/b.ts", "title": "T", "color": "red", "highlight": [1, 2]}]}
+
+Exit codes: 0 on success, 1 on invalid input or a failed render, 2 on a usage error.
+`
+
+class CliError extends Error {
+  constructor(message: string, readonly code = 1) {
+    super(message)
+  }
+}
+
+const read = (file: string, what: string): string => {
+  try {
+    return readFileSync(file === '-' ? 0 : file, 'utf8')
+  } catch {
+    throw new CliError(`Cannot read ${what} "${file}"`)
+  }
+}
+
+const isColor = (c: unknown): c is ColorName => (COLOR_NAMES as readonly unknown[]).includes(c)
+
+function parseHighlight(text: string): [number, number] {
+  const m = text.match(/^(\d+)(?:-(\d+))?$/)
+  if (!m) throw new CliError(`Malformed --highlight "${text}": use a step number like 3 or a range like 2-5`)
+  const from = Number(m[1])
+  const to = m[2] === undefined ? from : Number(m[2])
+  if (from < 1 || to < from) throw new CliError(`Malformed --highlight "${text}": steps are numbered from 1 and a range must go upwards`)
+  return [from, to]
+}
+
+/** Checks one panel the way the flags would be checked, so --spec gets the same messages. */
+function checkPanel(panel: Panel, where: string): void {
+  if (panel.color !== undefined && !isColor(panel.color)) {
+    throw new CliError(`${where}Unknown color "${panel.color}": use one of ${COLOR_NAMES.join(', ')}`)
+  }
+  const steps = parseTrace(panel.trace).length
+  if (steps === 0) throw new CliError(`${where}The trace has no steps`)
+  if (panel.highlight) {
+    const [from, to] = panel.highlight
+    if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || to < from) {
+      throw new CliError(`${where}Malformed highlight [${from}, ${to}]: steps are numbered from 1 and a range must go upwards`)
+    }
+    if (to > steps) throw new CliError(`${where}Highlight ${from}-${to} is out of range: the trace has ${steps} step${steps === 1 ? '' : 's'}`)
+  }
+}
+
+function specFromJson(text: string): TrailSpec {
+  let raw: unknown
+  try {
+    raw = JSON.parse(text)
+  } catch (e) {
+    throw new CliError(`The spec is not valid JSON: ${(e as Error).message}`)
+  }
+  const spec = raw as Partial<TrailSpec> | null
+  if (!spec || !Array.isArray(spec.panels) || spec.panels.length < 1 || spec.panels.length > 2) {
+    throw new CliError('The spec needs "panels": a list of one or two panels')
+  }
+  spec.panels.forEach((p, i) => {
+    if (!p || typeof p.trace !== 'string') throw new CliError(`Panel ${i + 1}: "trace" must be the trace file text`)
+    if (p.highlight !== undefined && (!Array.isArray(p.highlight) || p.highlight.length !== 2)) {
+      throw new CliError(`Panel ${i + 1}: "highlight" must be [from, to]`)
+    }
+    checkPanel(p, spec.panels!.length > 1 ? `Panel ${i + 1}: ` : '')
+  })
+  return spec as TrailSpec
+}
+
+interface RenderOptions {
+  title?: string
+  color?: string
+  highlight?: string
+  spec?: string
+  output: string
+}
+
+function render(trace: string | undefined, opts: RenderOptions): void {
+  let spec: TrailSpec
+  if (opts.spec !== undefined) {
+    if (trace !== undefined || opts.title !== undefined || opts.color !== undefined || opts.highlight !== undefined) {
+      throw new CliError('--spec cannot be combined with TRACE, --title, --color or --highlight', 2)
+    }
+    spec = specFromJson(read(opts.spec, 'spec file'))
+  } else {
+    if (trace === undefined) throw new CliError('Give exactly one TRACE file (or use --spec)', 2)
+    const panel: Panel = { trace: read(trace, 'trace file') }
+    if (opts.title !== undefined) panel.title = opts.title
+    if (opts.color !== undefined) panel.color = opts.color as ColorName
+    if (opts.highlight !== undefined) panel.highlight = parseHighlight(opts.highlight)
+    checkPanel(panel, '')
+    spec = { panels: [panel] }
+  }
+
+  let svg: string
+  try {
+    svg = renderTrail(spec)
+  } catch (e) {
+    throw new CliError((e as Error).message)
+  }
+  writeFileSync(opts.output, svg + '\n')
+}
+
+function buildProgram(): Command {
+  const program = new Command('tracetrail')
+    .description('Draw the route a trace takes through a directory tree as an SVG.')
+    .exitOverride()
+    .configureOutput({
+      writeOut: (s) => process.stdout.write(s),
+      writeErr: (s) => process.stderr.write(s),
+      outputError: (s, write) => write(`tracetrail: ${s.replace(/^error: /, '')}`),
+    })
+    .addHelpText('after', `${EXAMPLES}\nRun "tracetrail render --help" for every option.\n`)
+
+  program
+    .command('render')
+    .description('Render a trace file, or a trail spec, to an SVG file.')
+    .argument('[trace]', 'trace file, one step per line; "-" reads stdin')
+    .option('--title <text>', 'title drawn above the tree')
+    .option('--color <color>', `highlight color: ${COLOR_NAMES.join(', ')} (default: blue)`)
+    .option('--highlight <N|A-B>', 'steps drawn in color, 1-based: "3" for one step, "2-5" for a range (default: whole trace)')
+    .option('--spec <file>', 'read a trail spec as JSON instead of TRACE and the flags above; "-" reads stdin')
+    .requiredOption('-o, --output <file>', 'where to write the SVG')
+    .addHelpText('after', EXAMPLES)
+    .action(render)
+
+  return program
+}
+
+/** Runs the command and returns the exit code. */
+export async function main(argv: string[]): Promise<number> {
+  const program = buildProgram()
+  if (argv.length === 0) {
+    program.outputHelp()
+    return 2
+  }
+  try {
+    program.parse(argv, { from: 'user' })
+    return 0
+  } catch (e) {
+    if (e instanceof CliError) {
+      process.stderr.write(`tracetrail: ${e.message}\n`)
+      return e.code
+    }
+    // Commander has already printed its own message; usage errors are 2, --help is 0.
+    if (e instanceof CommanderError) return e.exitCode === 0 ? 0 : 2
+    throw e
+  }
+}

@@ -75,3 +75,7 @@ _Avoid_: Config, options, settings
 **Trail image**:
 The rendered result of a trail spec, as SVG or PNG.
 _Avoid_: Screenshot, graph, chart
+
+**Share link**:
+A URL of the web app whose fragment holds a trail spec, so that opening it shows the same trail image.
+_Avoid_: Permalink, short link

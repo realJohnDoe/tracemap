@@ -9,6 +9,7 @@ An npm workspaces monorepo (see [ADR-0001](./docs/adr/0001-workspaces-with-share
 - `packages/core`: private `@tracetrail/core`. Parsing, tree layout and SVG rendering, with no DOM dependency. Its public interface is the trail spec type and `renderTrail`, which takes a trail spec and returns SVG; it is tested against golden SVG fixtures in `packages/core/test/fixtures/`.
 - `packages/cli`: the `tracetrail` command (published later as `trace-trail`), with core bundled in. It runs from the workspace without a build step.
 - `apps/web`: the React web app. Browser-only helpers (SVG/PNG export, clipboard) live here.
+- `skills/`: agent skills, see [PR skill](#pr-skill).
 
 ## Commands
 
@@ -41,6 +42,12 @@ tracetrail render --spec trail.json -o out.svg
 - `-o, --output FILE`: where to write the SVG (required).
 
 Invalid input (unknown color, malformed or out-of-range highlight, empty trace, bad spec) prints a message to stderr and exits 1; usage errors exit 2. `tracetrail --help` lists everything with examples.
+
+## PR skill
+
+`skills/pr-trail-images/` is the agent skill that adds trail images to pull request descriptions (ADR-0007, ADR-0008). It is linked into `.claude/skills/` so Claude Code sessions in this repo find it, and it calls the CLI from the workspace. It needs `gh` 2.99+ with a working token. To have agents use it in another repo, add a sentence like this to that repo's `CLAUDE.md` or `AGENTS.md`:
+
+> After opening a pull request, or pushing changes to one, use the `pr-trail-images` skill to add or refresh trail images in its description.
 
 ## Design
 

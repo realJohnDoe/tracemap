@@ -1,0 +1,25 @@
+#!/usr/bin/env node
+// Replaces the trail image section of a PR body, or appends it if there is none yet.
+// Usage: splice-body.mjs SECTION_FILE < current-body.md > new-body.md
+// An empty SECTION_FILE removes the section.
+import { readFileSync } from 'node:fs'
+
+const START = '<!-- tracetrail:start -->'
+const END = '<!-- tracetrail:end -->'
+
+const [sectionFile] = process.argv.slice(2)
+if (!sectionFile) {
+  process.stderr.write('usage: splice-body.mjs SECTION_FILE < body.md > new-body.md\n')
+  process.exit(2)
+}
+const body = readFileSync(0, 'utf8').replace(/\r\n/g, '\n')
+const content = readFileSync(sectionFile, 'utf8').trim()
+const section = content ? `${START}\n${content}\n${END}` : ''
+
+const from = body.indexOf(START)
+const to = body.indexOf(END, from)
+const [before, after] = from !== -1 && to !== -1
+  ? [body.slice(0, from), body.slice(to + END.length)]
+  : [body, '']
+const parts = [before.trimEnd(), section, after.trim()].filter(Boolean)
+process.stdout.write(parts.join('\n\n') + '\n')

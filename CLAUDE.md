@@ -2,6 +2,10 @@
 
 - When you finish work on a feature branch, always open a pull request against `main` if none exists yet for that branch. Check for an existing PR first, and use the repo's PR template if there is one.
 
+## Trail images on PRs
+
+After opening a pull request here, or pushing changes to one, use the `pr-trail-images` skill (`skills/pr-trail-images/`, linked into `.claude/skills/`) to add or refresh trail images in its description. The skill decides whether images help; if `gh` is older than 2.99 or not authenticated, skip it and say so in your reply.
+
 ## Design docs
 
 Read `GLOSSARY.md` and the ADRs in `docs/adr/` before changing behaviour, and use the glossary's terms in code, issues and CLI flags.

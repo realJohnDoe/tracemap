@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vite-plus/test'
-import { COLOR_NAMES, EXAMPLE, renderTrail, type Panel } from '../src'
+import { COLOR_NAMES, EXAMPLE, renderTrail, type Panel, type TrailSpec } from '../src'
 
 const dir = (f: string) => fileURLToPath(new URL(`./fixtures/${f}`, import.meta.url))
 const read = (f: string) => readFileSync(dir(f), 'utf8')
@@ -19,10 +19,32 @@ const cases: { name: string; panel: () => Panel }[] = [
   ...COLOR_NAMES.map((color) => ({ name: `color-${color}`, panel: (): Panel => ({ trace: read('revisit.trace'), color, highlight: [2, 4] }) })),
 ]
 
+// Comparisons: two panels side by side on one tree (ADR-0005).
+const comparisons: { name: string; spec: () => TrailSpec }[] = [
+  {
+    name: 'compare-bug-fix',
+    spec: () => ({ panels: [
+      { trace: read('bug-fix-before.trace'), title: 'before' },
+      { trace: read('bug-fix-after.trace'), title: 'after' },
+    ] }),
+  },
+  {
+    name: 'compare-disjoint',
+    spec: () => ({ panels: [
+      { trace: read('disjoint-left.trace'), title: 'legacy', color: 'purple', highlight: [2, 3] },
+      { trace: read('disjoint-right.trace'), title: 'rewrite', color: 'purple', highlight: [1, 1] },
+    ] }),
+  },
+]
+
 describe('renderTrail against golden SVGs', () => {
-  for (const c of cases) {
+  const all = [
+    ...cases.map((c) => ({ name: c.name, spec: (): TrailSpec => ({ panels: [c.panel()] }) })),
+    ...comparisons,
+  ]
+  for (const c of all) {
     it(c.name, () => {
-      const svg = one(c.panel())
+      const svg = renderTrail(c.spec())
       const file = dir(`${c.name}.svg`)
       if (update) writeFileSync(file, svg + '\n')
       expect(svg + '\n').toBe(readFileSync(file, 'utf8'))
@@ -37,5 +59,28 @@ describe('renderTrail against golden SVGs', () => {
     const trace = read('simple.trace')
     expect(one({ trace, highlight: [9, 2] })).toBe(one({ trace, highlight: [2, 3] }))
     expect(one({ trace, highlight: [-5, 99] })).toBe(one({ trace }))
+  })
+})
+
+describe('renderTrail side by side', () => {
+  const left = read('bug-fix-before.trace'), right = read('bug-fix-after.trace')
+  const tops = (svg: string) => [...svg.matchAll(/<text x="[\d.]+" y="([\d.]+)" fill/g)].map((m) => m[1])
+
+  it('draws both panels on the same tree, so every path gets a label in each', () => {
+    const svg = renderTrail({ panels: [{ trace: left }, { trace: right }] })
+    for (const name of ['limits.py', 'errors.py', 'disk.py']) expect(svg.split(`>${name}<`).length - 1).toBe(2)
+    const ys = tops(svg)
+    expect(ys.slice(0, ys.length / 2)).toEqual(ys.slice(ys.length / 2))
+  })
+
+  it('keeps the rows aligned when only one panel has a title', () => {
+    const ys = tops(renderTrail({ panels: [{ trace: left, title: 'before' }, { trace: right }] }))
+    expect(ys.slice(0, ys.length / 2)).toEqual(ys.slice(ys.length / 2))
+  })
+
+  it('draws an empty side as a neutral grey tree', () => {
+    const svg = renderTrail({ panels: [{ trace: left }, { trace: '' }] })
+    expect(svg).toContain('right: no steps')
+    expect(renderTrail({ panels: [{ trace: '' }, { trace: '# none' }] })).toBe('')
   })
 })

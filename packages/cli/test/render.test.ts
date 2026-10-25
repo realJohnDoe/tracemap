@@ -106,11 +106,69 @@ describe('tracetrail render errors', () => {
   })
 })
 
+describe('tracetrail compare against the core golden SVGs', () => {
+  it('draws two panels side by side, titled before and after by default', () => {
+    const o = out()
+    expect(run('compare', fixture('bug-fix-before.trace'), fixture('bug-fix-after.trace'), '-o', o).code).toBe(0)
+    expect(readFileSync(o, 'utf8')).toBe(golden('compare-bug-fix'))
+  })
+
+  it('applies the per-side flags', () => {
+    const o = out()
+    const r = run('compare', fixture('disjoint-left.trace'), fixture('disjoint-right.trace'),
+      '--left-title', 'legacy', '--left-color', 'purple', '--left-highlight', '2-3',
+      '--right-title', 'rewrite', '--right-color', 'purple', '--right-highlight', '1', '-o', o)
+    expect(r.code).toBe(0)
+    expect(readFileSync(o, 'utf8')).toBe(golden('compare-disjoint'))
+  })
+
+  it('renders the same SVG from compare flags and from a two-panel --spec', () => {
+    const a = out(), b = out()
+    const left = readFileSync(fixture('bug-fix-before.trace'), 'utf8'), right = readFileSync(fixture('bug-fix-after.trace'), 'utf8')
+    run('compare', fixture('bug-fix-before.trace'), fixture('bug-fix-after.trace'),
+      '--left-highlight', '2-4', '--right-color', 'green', '--right-title', '', '-o', a)
+    const spec: TrailSpec = { panels: [{ trace: left, title: 'before', highlight: [2, 4] }, { trace: right, color: 'green' }] }
+    expect(run('render', '--spec', specFile(spec), '-o', b).code).toBe(0)
+    expect(readFileSync(a, 'utf8')).toBe(readFileSync(b, 'utf8'))
+    expect(readFileSync(b, 'utf8')).toBe(renderTrail(spec) + '\n')
+  })
+})
+
+describe('tracetrail compare errors', () => {
+  const fails = (expected: RegExp, code: number, ...args: string[]) => {
+    const r = run(...args)
+    expect(r.code).toBe(code)
+    expect(r.stderr).toMatch(expected)
+  }
+  const L = fixture('simple.trace'), R = fixture('revisit.trace')
+
+  it('names the side of an invalid flag', () => {
+    fails(/Right: Unknown color "pink"/, 1, 'compare', L, R, '--right-color', 'pink', '-o', out())
+    fails(/Malformed --left-highlight "x"/, 1, 'compare', L, R, '--left-highlight', 'x', '-o', out())
+    fails(/Left: Highlight 1-9 is out of range: the trace has 3 steps/, 1, 'compare', L, R, '--left-highlight', '1-9', '-o', out())
+    fails(/Cannot read right trace file/, 1, 'compare', L, join(tmp, 'nope.trace'), '-o', out())
+  })
+  it('needs both traces and -o', () => {
+    fails(/missing required argument 'right'/, 2, 'compare', L, '-o', out())
+    fails(/required option '-o, --output <file>'/, 2, 'compare', L, R)
+    fails(/Only one of LEFT and RIGHT/, 2, 'compare', '-', '-', '-o', out())
+  })
+})
+
 describe('tracetrail --help', () => {
   it('documents every flag with an example', () => {
     const r = run('render', '--help')
     expect(r.code).toBe(0)
     for (const s of ['--title', '--color', '--highlight', '--spec', '-o, --output', 'Examples:', ...COLOR_NAMES]) expect(r.stdout).toContain(s)
+  })
+
+  it('documents every compare flag', () => {
+    const r = run('compare', '--help')
+    expect(r.code).toBe(0)
+    for (const side of ['left', 'right']) for (const f of ['title', 'color', 'highlight']) expect(r.stdout).toContain(`--${side}-${f}`)
+    expect(r.stdout).toContain('"before"')
+    expect(r.stdout).toContain('"after"')
+    expect(r.stdout).toContain('side by side')
   })
 
   it('points the top-level help at render', () => {

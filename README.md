@@ -40,6 +40,16 @@ tracetrail render --spec trail.json -o out.svg
 - `--spec FILE`: a trail spec as JSON (`{"panels": [{"trace": "...", "title": "...", "color": "red", "highlight": [2, 5]}]}`) instead of `TRACE` and the flags above.
 - `-o, --output FILE`: where to write the SVG (required).
 
+`compare` draws two trace files as one comparison: two panels side by side on the same tree, built from the paths of both traces, so every path sits at the same height in both panels and paths only one trace visits stay neutral grey in the other:
+
+```sh
+tracetrail compare LEFT RIGHT \
+  [--left-title T] [--left-color C] [--left-highlight N|A-B] \
+  [--right-title T] [--right-color C] [--right-highlight N|A-B] -o out.svg
+```
+
+Titles default to `before` and `after` (`""` for none); both sides default to the same color. A trail spec with two panels renders the same image through `render --spec`. The web app's Compare mode builds the same trail spec.
+
 Invalid input (unknown color, malformed or out-of-range highlight, empty trace, bad spec) prints a message to stderr and exits 1; usage errors exit 2. `tracetrail --help` lists everything with examples.
 
 ## Design

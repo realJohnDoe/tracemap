@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { COLOR_NAMES, EXAMPLE, parseTrace, renderTrail, type ColorName, type TrailSpec } from '@tracetrail/core'
+import { COLOR_NAMES, EXAMPLE, parseTrace, renderTrail, type ColorName, type Panel, type TrailSpec } from '@tracetrail/core'
 import { download, serializeSvg, svgToPngBlob } from './lib/export'
 
 const btn = 'cursor-pointer rounded-md border border-line bg-panel px-3 py-[5px] text-[13px] text-ink hover:border-trail'
@@ -8,7 +8,69 @@ const val = 'font-mono text-[13px] font-semibold normal-case tracking-normal tex
 const field = 'rounded-md border border-line bg-bg px-2 py-[5px] text-[13px] text-ink'
 const area = 'w-full resize-y whitespace-pre overflow-auto rounded-md border border-line bg-bg p-2.5 font-mono text-xs leading-normal text-ink'
 
+// The right side of the example comparison: the same login after a lockout counter was added.
+const EXAMPLE_AFTER = EXAMPLE.replace(
+  /^(src\/app\/security\/passwords\.py.*)$/m,
+  '$1\nsrc/app/security/lockout.py          # Failed-attempt counter reset',
+)
+
+/** One panel's controls in Compare mode; a null highlight means the whole trace. */
+interface Side {
+  trace: string
+  title: string
+  color: ColorName
+  highlight: [number, number] | null
+}
+
+// Same defaults as `tracetrail compare`: titled before and after, both sides in the same color.
+const SIDES: [Side, Side] = [
+  { trace: EXAMPLE, title: 'before', color: 'blue', highlight: null },
+  { trace: EXAMPLE_AFTER, title: 'after', color: 'blue', highlight: null },
+]
+
+const toPanel = (s: Side): Panel => ({ trace: s.trace, title: s.title || undefined, color: s.color, highlight: s.highlight ?? undefined })
+
+function SideControls({ name, side, onChange }: { name: 'Left' | 'Right'; side: Side; onChange: (s: Side) => void }) {
+  const n = useMemo(() => parseTrace(side.trace).length, [side.trace])
+  const clamp = (k: number) => Math.min(Math.max(k, 1), Math.max(n, 1))
+  const from = side.highlight ? clamp(side.highlight[0]) : 1
+  const to = side.highlight ? clamp(side.highlight[1]) : Math.max(n, 1)
+  const id = name.toLowerCase()
+  const set = (patch: Partial<Side>) => onChange({ ...side, ...patch })
+
+  return (
+    <fieldset className="m-0 flex min-w-0 flex-col gap-1.5 rounded-lg border border-line bg-panel px-4 py-3.5">
+      <legend className="px-1 font-medium">{name}</legend>
+      <label htmlFor={`${id}-title`} className={lbl}>Title</label>
+      <input id={`${id}-title`} type="text" className={field} placeholder="Optional, drawn above the panel"
+        value={side.title} onChange={(e) => set({ title: e.target.value })} />
+      <label htmlFor={`${id}-color`} className={lbl}>Color</label>
+      <select id={`${id}-color`} className={field} value={side.color} onChange={(e) => set({ color: e.target.value as ColorName })}>
+        {COLOR_NAMES.map((c) => <option key={c} value={c}>{c}</option>)}
+      </select>
+      <label htmlFor={`${id}-from`} className={lbl}>
+        Highlight from <b className={val}>{n ? `${from} / ${n}` : '0 / 0'}</b>
+      </label>
+      <input id={`${id}-from`} type="range" min={1} max={Math.max(1, n)} value={from}
+        onChange={(e) => { const k = Number(e.target.value); set({ highlight: [k, Math.max(k, to)] }) }} />
+      <label htmlFor={`${id}-to`} className={lbl}>
+        Highlight to <b className={val}>{n ? `${to} / ${n}` : '0 / 0'}</b>
+      </label>
+      <input id={`${id}-to`} type="range" min={1} max={Math.max(1, n)} value={to}
+        onChange={(e) => { const k = Number(e.target.value); set({ highlight: [Math.min(from, k), k] }) }} />
+      <div className="flex flex-wrap items-center gap-2">
+        <button className={btn} onClick={() => set({ highlight: null })}>Whole trace</button>
+      </div>
+      <label htmlFor={`${id}-trace`} className={lbl}>Trace</label>
+      <textarea id={`${id}-trace`} className={`${area} min-h-[180px]`} spellCheck={false}
+        value={side.trace} onChange={(e) => set({ trace: e.target.value })} />
+    </fieldset>
+  )
+}
+
 export default function App() {
+  const [mode, setMode] = useState<'single' | 'compare'>('single')
+  const [sides, setSides] = useState<[Side, Side]>(SIDES)
   const [text, setText] = useState(EXAMPLE)
   // Trail spec fields; a null highlight means the whole trace.
   const [highlight, setHighlight] = useState<[number, number] | null>(null)
@@ -26,8 +88,10 @@ export default function App() {
   const to = highlight ? clamp(highlight[1]) : Math.max(n, 1)
 
   const spec: TrailSpec = useMemo(
-    () => ({ panels: [{ trace: text, title: title || undefined, color, highlight: highlight ?? undefined }] }),
-    [text, title, color, highlight],
+    () => mode === 'compare'
+      ? { panels: [toPanel(sides[0]), toPanel(sides[1])] }
+      : { panels: [{ trace: text, title: title || undefined, color, highlight: highlight ?? undefined }] },
+    [mode, sides, text, title, color, highlight],
   )
   const svg = useMemo(() => renderTrail(spec), [spec])
 
@@ -47,6 +111,7 @@ export default function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLInputElement
+      if (mode !== 'single') return
       if (/^(TEXTAREA|INPUT|SELECT)$/.test(t.tagName) && t.type !== 'range') return
       if (e.key === 'ArrowLeft') goStep(single ? from - 1 : from)
       else if (e.key === 'ArrowRight') goStep(single ? from + 1 : from)
@@ -100,6 +165,11 @@ export default function App() {
   }
 
   const s = single ? steps[from - 1] : undefined
+  const switchMode = (m: 'single' | 'compare') => { setPlaying(false); setMode(m) }
+  const modeBtn = (m: 'single' | 'compare', name: string) => (
+    <button className={`${btn} ${mode === m ? '!border-trail font-medium' : ''}`} aria-pressed={mode === m}
+      onClick={() => switchMode(m)}>{name}</button>
+  )
 
   return (
     <div className="mx-auto flex max-w-[980px] flex-col gap-4">
@@ -107,9 +177,20 @@ export default function App() {
         <h1 className="m-0 text-[22px] font-semibold tracking-tight text-balance">Trace Trail</h1>
         <p className="m-0 max-w-[65ch] text-muted">
           Draws a trace through the directory tree. Pick the highlight, the steps drawn in color; everything else stays neutral grey.
+          Compare draws two traces side by side on the same tree, typically before and after a change.
         </p>
+        <div className="mt-1 flex gap-2" role="group" aria-label="Mode">
+          {modeBtn('single', 'Single trace')}
+          {modeBtn('compare', 'Compare')}
+        </div>
       </header>
 
+      {mode === 'compare' ? (
+        <section aria-label="Trail spec" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <SideControls name="Left" side={sides[0]} onChange={(l) => setSides([l, sides[1]])} />
+          <SideControls name="Right" side={sides[1]} onChange={(r) => setSides([sides[0], r])} />
+        </section>
+      ) : (<>
       <section aria-label="Trail spec" className="grid grid-cols-1 gap-x-6 gap-y-3.5 rounded-lg border border-line bg-panel px-4 py-3.5 sm:grid-cols-2">
         <div className="flex min-w-0 flex-col gap-1.5">
           <label htmlFor="from" className={lbl}>
@@ -158,8 +239,10 @@ export default function App() {
         )}
       </div>
 
+      </>)}
+
       <div ref={panelRef} className="overflow-x-auto rounded-lg border border-line bg-panel [&_svg]:block">
-        {n ? (
+        {svg ? (
           <div dangerouslySetInnerHTML={{ __html: svg }} />
         ) : (
           <p className="m-0 p-4 text-[13px] text-now">No paths found. Put one file or directory path on each line.</p>
@@ -167,8 +250,9 @@ export default function App() {
       </div>
 
       <details className="rounded-lg border border-line bg-panel px-4 py-2.5">
-        <summary className="cursor-pointer font-medium">Trace input and export</summary>
+        <summary className="cursor-pointer font-medium">{mode === 'single' ? 'Trace input and export' : 'Export'}</summary>
         <div className="mt-2.5 flex flex-col gap-2.5">
+          {mode === 'single' && (<>
           <p className="m-0 max-w-[70ch] text-xs text-muted">
             One file or directory path per line, in the order it was visited. A trailing slash marks a directory.
             Text after <code>#</code> on a line becomes the note for that step. Lines that start with <code>#</code> are ignored.
@@ -184,6 +268,9 @@ export default function App() {
               e.target.value = ''
             }} />
             <button className={btn} onClick={() => loadText(EXAMPLE)}>Reset example</button>
+          </div>
+          </>)}
+          <div className="flex flex-wrap items-center gap-2">
             <button className={btn} onClick={copySvg}>Copy SVG</button>
             <button className={btn} onClick={savePng}>Download PNG</button>
             <button className={btn} onClick={saveSvg}>Download SVG</button>

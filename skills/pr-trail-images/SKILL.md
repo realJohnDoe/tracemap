@@ -5,9 +5,7 @@ description: Add trail images to a pull request description, drawing the route t
 
 # PR trail images
 
-Adds one to five trail images to a pull request description, or none when they would not help. Vocabulary is from the repo's `GLOSSARY.md`: a **trace** is an ordered list of **steps** (file or directory paths with an optional **note**), a **highlight** is the one interval of steps drawn in colour, a **trail image** is the rendered result.
-
-Decisions this skill follows: ADR-0007 (images are attached with `gh --attach`, nothing is stored in the repo) and ADR-0008 (one to five images, only when they help).
+Adds one to five trail images to a pull request description, or none when they would not help. Terms: a **trace** is an ordered list of **steps** (file or directory paths with an optional **note**), a **highlight** is the one interval of steps drawn in colour, a **trail image** is the rendered result.
 
 ## Hard rules
 

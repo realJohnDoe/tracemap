@@ -37,6 +37,8 @@ Then pick how images will reach the PR:
 
 Use `gh api` (REST) to read and write the PR in both cases: `gh pr view`, `gh pr diff` and `gh pr edit` use GraphQL, which some sandboxes block; `gh pr edit --attach` is used only when uploading works.
 
+`gh api` fills in `{owner}/{repo}` from the git remote. If the remote is not a plain GitHub URL (some sandboxes point `origin` at a local git proxy) and `gh` cannot tell the repo, set `GH_REPO=owner/repo` for these commands; `push-assets.sh` reads it too.
+
 In this repo the CLI runs from the workspace (`npx tracetrail`, which resolves to `packages/cli`), not from npm. Elsewhere use `npx trace-trail` once it is published.
 
 ## 2. Read the PR and decide
@@ -106,17 +108,19 @@ Look at the SVGs before attaching them if you can (for example a headless-browse
 
 ## 5. Write the section and update the PR
 
-Write the section in `$dir/section.md`. Image references are relative (`./trail-1.svg`); both ways of attaching rewrite them to real URLs. Each image gets a short caption tied to the PR text: what the reader should look at, in the PR's own terms.
+Write the section in `$dir/section.md`. Image references are relative (`./trail-1.svg`); both ways of attaching rewrite them to real URLs.
+
+Each image gets a description above it, so a reader can follow the picture without decoding it: a bold title, then a short paragraph (about 3–6 sentences) that walks the highlighted route by its step numbers in the PR's own terms, says which steps the PR changes, and names what is drawn in grey and why. Notes from the trace are good raw material, since the renderer does not draw them.
 
 ```markdown
 ## Trail images
 
-**Render a trail spec.** `--spec` now goes through the same checks as the flags (step 2) before core draws it.
+**Render a trail spec.** The blue route is one `tracetrail render --spec` run. The entry point (1) hands over to `main.ts` (2), which now runs the same checks on the spec as on the flags; this is the change in this PR. Core parses each panel's trace (3) and draws the SVG (4), and `main.ts` writes it to `--output` (5). In grey: the new test, which exercises the same route.
 
-![Route of tracetrail render --spec through cli and core](./trail-1.svg)
+![Route of tracetrail render --spec: the entry point, main.ts, core's trace.ts and render.ts, back to main.ts; the new test in grey](./trail-1.svg)
 ```
 
-Use the alt text to describe the route in words. Keep captions to one or two sentences.
+The alt text is a one-line summary of the route, for screen readers and for when the image does not load.
 
 Splice the section into the current body. Keep `body.md` in `$dir`, because `gh` resolves the image paths relative to the body file's directory:
 

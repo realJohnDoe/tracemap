@@ -15,7 +15,15 @@ pr=$1
 shift
 case "$pr" in *[!0-9]* | '') echo "push-assets: PR_NUMBER must be a number" >&2; exit 2 ;; esac
 
-repo=$(git remote get-url origin | sed -E 's#^(https://|git@)github\.com[:/]##; s#\.git$##')
+# owner/repo: GH_REPO if set (gh reads it too), else the last two parts of origin's URL,
+# which also covers sandbox git proxies such as http://proxy@127.0.0.1:1234/git/owner/repo.
+repo=${GH_REPO:-$(git remote get-url origin | sed -E 's#\.git/?$##; s#^.*[/:]([^/:]+/[^/:]+)$#\1#')}
+case "$repo" in
+  */*/* | /* | */ | *[!A-Za-z0-9._/-]*) repo= ;;
+  */*) ;;
+  *) repo= ;;
+esac
+[ -n "$repo" ] || { echo "push-assets: cannot tell owner/repo from origin; set GH_REPO=owner/repo" >&2; exit 2; }
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 export GIT_INDEX_FILE="$tmp/index"

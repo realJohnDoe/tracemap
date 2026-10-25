@@ -12,3 +12,5 @@ type Panel = { trace: string; title?: string; color?: ColorName; highlight?: [fr
 ```
 
 There is no layout field: side by side is the only arrangement for now.
+
+"The same trail spec always yields the same image" is exact for SVG. PNG bytes also depend on the installed fonts (ADR-0010). The web app encodes a trail spec into a share link as described in ADR-0011.

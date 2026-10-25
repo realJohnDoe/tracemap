@@ -16,10 +16,10 @@ const body = readFileSync(0, 'utf8').replace(/\r\n/g, '\n')
 const content = readFileSync(sectionFile, 'utf8').trim()
 const section = content ? `${START}\n${content}\n${END}` : ''
 
-const from = body.indexOf(START)
-const to = body.indexOf(END, from)
-const [before, after] = from !== -1 && to !== -1
-  ? [body.slice(0, from), body.slice(to + END.length)]
+// Markers count only on a line of their own, so text that quotes them is left alone.
+const marked = body.match(new RegExp(`^${START}$[\\s\\S]*?^${END}$`, 'm'))
+const [before, after] = marked
+  ? [body.slice(0, marked.index), body.slice(marked.index + marked[0].length)]
   : [body, '']
 const parts = [before.trimEnd(), section, after.trim()].filter(Boolean)
 process.stdout.write(parts.join('\n\n') + '\n')

@@ -26,11 +26,11 @@ After an intended rendering change, regenerate the golden SVGs with `UPDATE_GOLD
 
 ## CLI
 
-After `npm install`, run the CLI from the repo root with `npx tracetrail`. `render` draws a trace file as an SVG:
+After `npm install`, run the CLI from the repo root with `npx tracetrail`. `render` draws a trace file as an SVG (or PNG):
 
 ```sh
-tracetrail render TRACE [--title T] [--color C] [--highlight N|A-B] -o out.svg
-tracetrail render --spec trail.json -o out.svg
+tracetrail render TRACE [--title T] [--color C] [--highlight N|A-B] [--dark-mode] [--png] -o out.svg
+tracetrail render --spec trail.json [--dark-mode] [--png] -o out.svg
 ```
 
 - `TRACE`: a trace file, one step per line (`-` reads stdin).
@@ -38,7 +38,9 @@ tracetrail render --spec trail.json -o out.svg
 - `--color C`: `blue` (default), `red`, `green`, `orange`, `purple` or `gray`.
 - `--highlight N|A-B`: 1-based step numbers to draw in color, e.g. `3` or `2-5`. Default: the whole trace.
 - `--spec FILE`: a trail spec as JSON (`{"panels": [{"trace": "...", "title": "...", "color": "red", "highlight": [2, 5]}]}`) instead of `TRACE` and the flags above.
-- `-o, --output FILE`: where to write the SVG (required).
+- `--dark-mode`: draw the dark theme instead of the light one ([ADR-0006](./docs/adr/0006-svg-first-system-monospace-named-colors.md)). With `--spec` it overrides the spec's `theme`. The web app has the same switch as **Dark theme**, and a trail spec can set `"theme": "dark"`.
+- `--png`: write a PNG instead of an SVG; an output path ending in `.png` does the same. The conversion uses `@resvg/resvg-js` and needs no browser, but it needs a monospace font installed (for example DejaVu Sans Mono or Liberation Mono in a bare container image). Without one the command exits with an error instead of writing a PNG without text ([ADR-0010](./docs/adr/0010-png-is-rendered-with-resvg-js-and-needs-an-installed-monospace-font.md)). PNG bytes depend on the installed fonts, so only SVG output is byte-for-byte reproducible.
+- `-o, --output FILE`: where to write the image (required).
 
 Invalid input (unknown color, malformed or out-of-range highlight, empty trace, bad spec) prints a message to stderr and exits 1; usage errors exit 2. `tracetrail --help` lists everything with examples.
 

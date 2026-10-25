@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { COLOR_NAMES, EXAMPLE, parseTrace, renderTrail, type ColorName, type TrailSpec } from '@tracetrail/core'
+import { COLOR_NAMES, EXAMPLE, parseTrace, renderTrail, type ColorName, type Theme, type TrailSpec } from '@tracetrail/core'
 import { download, serializeSvg, svgToPngBlob } from './lib/export'
 
 const btn = 'cursor-pointer rounded-md border border-line bg-panel px-3 py-[5px] text-[13px] text-ink hover:border-trail'
@@ -14,6 +14,7 @@ export default function App() {
   const [highlight, setHighlight] = useState<[number, number] | null>(null)
   const [color, setColor] = useState<ColorName>('blue')
   const [title, setTitle] = useState('')
+  const [theme, setTheme] = useState<Theme>('light')
   const [playing, setPlaying] = useState(false)
   const [status, setStatus] = useState('')
   const [svgSource, setSvgSource] = useState<string | null>(null)
@@ -26,8 +27,8 @@ export default function App() {
   const to = highlight ? clamp(highlight[1]) : Math.max(n, 1)
 
   const spec: TrailSpec = useMemo(
-    () => ({ panels: [{ trace: text, title: title || undefined, color, highlight: highlight ?? undefined }] }),
-    [text, title, color, highlight],
+    () => ({ panels: [{ trace: text, title: title || undefined, color, highlight: highlight ?? undefined }], theme }),
+    [text, title, color, highlight, theme],
   )
   const svg = useMemo(() => renderTrail(spec), [spec])
 
@@ -139,6 +140,10 @@ export default function App() {
           <label htmlFor="title" className={lbl}>Title</label>
           <input id="title" type="text" className={field} placeholder="Optional, drawn above the tree"
             value={title} onChange={(e) => setTitle(e.target.value)} />
+          <label className="mt-1 flex cursor-pointer items-center gap-2 text-[13px] text-ink">
+            <input type="checkbox" checked={theme === 'dark'} onChange={(e) => setTheme(e.target.checked ? 'dark' : 'light')} />
+            Dark theme
+          </label>
         </div>
       </section>
 

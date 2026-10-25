@@ -5,7 +5,7 @@ const ROW = 28, IND = 16, PADL = 34, PADT = 18, CW = 7.8, PADR = 16
 const TITLE_SIZE = 14, TITLE_H = 30
 const CORNER = 6
 
-const FONT = "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace"
+export const FONT_FAMILY = "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace"
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 const px = (n: number) => Math.round(n * 10) / 10
@@ -86,7 +86,7 @@ function renderPanel(panel: Panel, theme: keyof typeof PALETTES): string {
   const what = lo === hi ? `step ${lo + 1} of ${n} highlighted` : `steps ${lo + 1} to ${hi + 1} of ${n} highlighted`
   const label = (title ? title + ': ' : '') + 'Trace through the directory tree, ' + what
   const o: string[] = []
-  o.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="${FONT}" font-size="13" role="img" aria-label="${esc(label)}">`)
+  o.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="${FONT_FAMILY}" font-size="13" role="img" aria-label="${esc(label)}">`)
   o.push(`<rect width="${W}" height="${H}" fill="${pal.background}"/>`)
   if (title) o.push(`<text x="${RX}" y="${PADT + TITLE_SIZE}" font-size="${TITLE_SIZE}" font-weight="600" fill="${pal.ink}">${esc(title)}</text>`)
 

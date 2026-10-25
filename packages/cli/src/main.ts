@@ -1,5 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
+import { extname } from 'node:path'
 import { Command, CommanderError } from 'commander'
+import { svgToPng } from './png'
 import { COLOR_NAMES, parseTrace, renderTrail, type ColorName, type Panel, type TrailSpec } from '@tracetrail/core'
 
 const EXAMPLES = `
@@ -7,6 +9,8 @@ Examples:
   tracetrail render login.trace -o login.svg
   tracetrail render login.trace --title "Authentication" --color green --highlight 4-9 -o auth.svg
   tracetrail render --spec trail.json -o out.svg
+  tracetrail render login.trace --dark-mode -o login-dark.svg
+  tracetrail render login.trace --png -o login.png
 
 A trace file has one step per line, in order, naming a file or a directory (ending
 in "/"). Text after " # " is a note. Blank lines and lines starting with "#" are
@@ -85,10 +89,12 @@ interface RenderOptions {
   color?: string
   highlight?: string
   spec?: string
+  darkMode?: boolean
+  png?: boolean
   output: string
 }
 
-function render(trace: string | undefined, opts: RenderOptions): void {
+async function render(trace: string | undefined, opts: RenderOptions): Promise<void> {
   let spec: TrailSpec
   if (opts.spec !== undefined) {
     if (trace !== undefined || opts.title !== undefined || opts.color !== undefined || opts.highlight !== undefined) {
@@ -105,11 +111,21 @@ function render(trace: string | undefined, opts: RenderOptions): void {
     spec = { panels: [panel] }
   }
 
+  if (opts.darkMode) spec = { ...spec, theme: 'dark' }
+
   let svg: string
   try {
     svg = renderTrail(spec)
   } catch (e) {
     throw new CliError((e as Error).message)
+  }
+  if (opts.png || extname(opts.output).toLowerCase() === '.png') {
+    try {
+      writeFileSync(opts.output, await svgToPng(svg))
+    } catch (e) {
+      throw new CliError((e as Error).message)
+    }
+    return
   }
   writeFileSync(opts.output, svg + '\n')
 }
@@ -127,13 +143,15 @@ function buildProgram(): Command {
 
   program
     .command('render')
-    .description('Render a trace file, or a trail spec, to an SVG file.')
+    .description('Render a trace file, or a trail spec, to an SVG or PNG file.')
     .argument('[trace]', 'trace file, one step per line; "-" reads stdin')
     .option('--title <text>', 'title drawn above the tree')
     .option('--color <color>', `highlight color: ${COLOR_NAMES.join(', ')} (default: blue)`)
     .option('--highlight <N|A-B>', 'steps drawn in color, 1-based: "3" for one step, "2-5" for a range (default: whole trace)')
     .option('--spec <file>', 'read a trail spec as JSON instead of TRACE and the flags above; "-" reads stdin')
-    .requiredOption('-o, --output <file>', 'where to write the SVG')
+    .option('--dark-mode', 'render the dark theme instead of the light one')
+    .option('--png', 'write a PNG instead of an SVG (also chosen by an output path ending in .png); needs a monospace font installed')
+    .requiredOption('-o, --output <file>', 'where to write the image')
     .addHelpText('after', EXAMPLES)
     .action(render)
 
@@ -148,7 +166,7 @@ export async function main(argv: string[]): Promise<number> {
     return 2
   }
   try {
-    program.parse(argv, { from: 'user' })
+    await program.parseAsync(argv, { from: 'user' })
     return 0
   } catch (e) {
     if (e instanceof CliError) {

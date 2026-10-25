@@ -53,6 +53,26 @@ describe('tracetrail render against the core golden SVGs', () => {
     })
   }
 
+  it('draws --dark-mode like the dark golden SVGs', () => {
+    const o = out()
+    expect(run('render', exampleFile, '--title', 'Authentication', '--highlight', '4-9', '--dark-mode', '-o', o).code).toBe(0)
+    expect(readFileSync(o, 'utf8')).toBe(golden('dark-interval'))
+  })
+
+  for (const color of COLOR_NAMES) {
+    it(`draws --dark-mode --color ${color}`, () => {
+      const o = out()
+      expect(run('render', fixture('revisit.trace'), '--color', color, '--highlight', '2-4', '--dark-mode', '-o', o).code).toBe(0)
+      expect(readFileSync(o, 'utf8')).toBe(golden(`dark-color-${color}`))
+    })
+  }
+
+  it('applies --dark-mode to a --spec', () => {
+    const o = out()
+    expect(run('render', '--spec', specFile({ panels: [{ trace: EXAMPLE }] }), '--dark-mode', '-o', o).code).toBe(0)
+    expect(readFileSync(o, 'utf8')).toBe(renderTrail({ panels: [{ trace: EXAMPLE }], theme: 'dark' }) + '\n')
+  })
+
   it('renders --spec byte-identically to core', () => {
     const spec: TrailSpec = { panels: [{ trace: EXAMPLE, title: 'Authentication', color: 'red', highlight: [4, 9] }] }
     const o = out()
@@ -65,6 +85,30 @@ describe('tracetrail render against the core golden SVGs', () => {
     run('render', exampleFile, '--title', 'T', '--color', 'purple', '--highlight', '3-6', '-o', a)
     run('render', '--spec', specFile({ panels: [{ trace: EXAMPLE, title: 'T', color: 'purple', highlight: [3, 6] }] }), '-o', b)
     expect(readFileSync(a, 'utf8')).toBe(readFileSync(b, 'utf8'))
+  })
+})
+
+const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+
+describe('tracetrail render --png', () => {
+  it('writes a PNG with --png, even to a path without the extension', () => {
+    const o = join(tmp, `img${n++}`)
+    const r = run('render', exampleFile, '--png', '-o', o)
+    expect(r.stderr).toBe('')
+    expect(r.code).toBe(0)
+    expect(readFileSync(o).subarray(0, 8).equals(PNG_MAGIC)).toBe(true)
+  })
+
+  it('writes a PNG when the output path ends in .png', () => {
+    const o = join(tmp, `img${n++}.png`)
+    expect(run('render', exampleFile, '--dark-mode', '-o', o).code).toBe(0)
+    expect(readFileSync(o).subarray(0, 8).equals(PNG_MAGIC)).toBe(true)
+  })
+
+  it('draws text: the PNG is larger than one of a trace with no labels would be', () => {
+    const o = out().replace(/\.svg$/, '.png')
+    run('render', exampleFile, '-o', o)
+    expect(readFileSync(o).length).toBeGreaterThan(5000)
   })
 })
 

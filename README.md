@@ -1,10 +1,10 @@
 # Trace Trail
 
-Follows a trace through a directory tree, step by step. Built with Vite, React, TypeScript and Tailwind CSS v4.
+Follows a trace through a directory tree, step by step. Built with [Vite+](https://viteplus.dev), React, TypeScript and Tailwind CSS v4.
 
 ```sh
 npm install
-npm run dev      # local dev server
+npm run dev      # local dev server (vp dev)
 npm run build    # type-check + production build into dist/
 ```
 

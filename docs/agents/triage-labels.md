@@ -13,3 +13,15 @@ The skills speak in terms of five canonical triage roles. This file maps those r
 When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the corresponding label string from this table.
 
 Edit the "Label in our tracker" column to match whatever vocabulary you actually use.
+
+## Implementer labels
+
+Every ticket also carries exactly one label saying who should pick it up:
+
+| Label    | Meaning                                                                  |
+| -------- | ------------------------------------------------------------------------ |
+| `Human`  | Needs a human decision or human-only access (accounts, secrets, taste)   |
+| `Opus`   | Agent-ready, but design-heavy or needs judgement: use the stronger model |
+| `Sonnet` | Agent-ready and well specified: mechanical or follows settled decisions  |
+
+`Human` tickets also get `ready-for-human`; `Opus` and `Sonnet` tickets get `ready-for-agent`.

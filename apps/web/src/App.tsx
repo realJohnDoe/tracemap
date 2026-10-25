@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { buildTree, EXAMPLE, parseTrace, renderSvg } from './lib/trace'
+import { buildTree, EXAMPLE, parseTrace, renderSvg } from '@tracetrail/core'
 import { download, serializeSvg, svgToPngBlob } from './lib/export'
 
 const btn = 'cursor-pointer rounded-md border border-line bg-panel px-3 py-[5px] text-[13px] text-ink hover:border-trail'

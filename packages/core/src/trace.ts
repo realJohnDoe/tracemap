@@ -196,3 +196,21 @@ export function renderSvg(steps: Step[], rows: Row[], cur: number, trail: number
   o.push('</svg>')
   return o.join('')
 }
+
+export interface RenderOptions {
+  /** Zero-based index of the current step. Clamped to the trace. */
+  step?: number
+  /** How many earlier steps stay visible behind the current one. */
+  trail?: number
+  /** Draw the whole route faintly behind the trail. */
+  showAll?: boolean
+}
+
+/** Trace file text in, SVG text out: the public seam the golden tests run through. */
+export function renderTrace(text: string, { step = 0, trail = 3, showAll = true }: RenderOptions = {}): string {
+  const steps = parseTrace(text)
+  if (!steps.length) return ''
+  const last = steps.length - 1
+  const cur = Math.min(Math.max(step, 0), last)
+  return renderSvg(steps, buildTree(steps), cur, Math.min(trail, Math.max(1, last)), showAll)
+}

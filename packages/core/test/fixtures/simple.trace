@@ -1,0 +1,3 @@
+src/index.ts   # Entry point
+src/lib/a.ts   # Helper called
+README.md

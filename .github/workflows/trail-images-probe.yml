@@ -64,7 +64,7 @@ jobs:
           printf '%s\n' '## Trail images (probe)' '' \
             'Temporary: tests whether the Actions token can attach trail images (#14). It will be removed.' '' \
             '![Probe route through cli and core](./trail-1.svg)' > section.md
-          gh pr view "$PR" --json body --jq .body > old-body.md
+          gh pr view "$PR" -R "$GITHUB_REPOSITORY" --json body --jq .body > old-body.md
           node "$GITHUB_WORKSPACE/skills/pr-trail-images/scripts/splice-body.mjs" section.md < old-body.md > body.md
-          gh pr edit "$PR" --body-file body.md --attach ./trail-1.svg
-          gh pr view "$PR" --json body --jq .body | sed -n '/tracetrail:start/,/tracetrail:end/p'
+          gh pr edit "$PR" -R "$GITHUB_REPOSITORY" --body-file body.md --attach ./trail-1.svg
+          gh pr view "$PR" -R "$GITHUB_REPOSITORY" --json body --jq .body | sed -n '/tracetrail:start/,/tracetrail:end/p'

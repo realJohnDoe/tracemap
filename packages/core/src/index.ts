@@ -1,2 +1,5 @@
-export { buildTree, EXAMPLE, parseTrace, renderSvg, renderTrace } from './trace'
-export type { RenderOptions, Row, Step } from './trace'
+export { renderTrail } from './render'
+export { COLOR_NAMES } from './spec'
+export type { ColorName, Panel, Theme, TrailSpec } from './spec'
+export { EXAMPLE, parseTrace } from './trace'
+export type { Step } from './trace'

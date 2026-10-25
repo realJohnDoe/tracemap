@@ -11,6 +11,8 @@ Examples:
   tracetrail render --spec trail.json -o out.svg
   tracetrail render login.trace --dark-mode -o login-dark.svg
   tracetrail render login.trace --png -o login.png
+  tracetrail compare old.trace new.trace --right-highlight 2-5 -o fix.svg
+  tracetrail compare old.trace new.trace --dark-mode --png -o fix.png
 
 A trace file has one step per line, in order, naming a file or a directory (ending
 in "/"). Text after " # " is a note. Blank lines and lines starting with "#" are
@@ -18,6 +20,8 @@ ignored.
 
 A trail spec is JSON, for example:
   {"panels": [{"trace": "src/a.ts # start\\nsrc/b.ts", "title": "T", "color": "red", "highlight": [1, 2]}]}
+
+A trail spec with two panels draws them side by side, like "compare".
 
 Exit codes: 0 on success, 1 on invalid input or a failed render, 2 on a usage error.
 `
@@ -38,12 +42,12 @@ const read = (file: string, what: string): string => {
 
 const isColor = (c: unknown): c is ColorName => (COLOR_NAMES as readonly unknown[]).includes(c)
 
-function parseHighlight(text: string): [number, number] {
+function parseHighlight(text: string, flag = '--highlight'): [number, number] {
   const m = text.match(/^(\d+)(?:-(\d+))?$/)
-  if (!m) throw new CliError(`Malformed --highlight "${text}": use a step number like 3 or a range like 2-5`)
+  if (!m) throw new CliError(`Malformed ${flag} "${text}": use a step number like 3 or a range like 2-5`)
   const from = Number(m[1])
   const to = m[2] === undefined ? from : Number(m[2])
-  if (from < 1 || to < from) throw new CliError(`Malformed --highlight "${text}": steps are numbered from 1 and a range must go upwards`)
+  if (from < 1 || to < from) throw new CliError(`Malformed ${flag} "${text}": steps are numbered from 1 and a range must go upwards`)
   return [from, to]
 }
 
@@ -84,14 +88,11 @@ function specFromJson(text: string): TrailSpec {
   return spec as TrailSpec
 }
 
-interface RenderOptions {
+interface RenderOptions extends OutputOptions {
   title?: string
   color?: string
   highlight?: string
   spec?: string
-  darkMode?: boolean
-  png?: boolean
-  output: string
 }
 
 async function render(trace: string | undefined, opts: RenderOptions): Promise<void> {
@@ -111,8 +112,18 @@ async function render(trace: string | undefined, opts: RenderOptions): Promise<v
     spec = { panels: [panel] }
   }
 
-  if (opts.darkMode) spec = { ...spec, theme: 'dark' }
+  await write(spec, opts)
+}
 
+interface OutputOptions {
+  darkMode?: boolean
+  png?: boolean
+  output: string
+}
+
+/** Renders the trail spec and writes it as SVG, or as PNG for --png or a .png output path. */
+async function write(spec: TrailSpec, opts: OutputOptions): Promise<void> {
+  if (opts.darkMode) spec = { ...spec, theme: 'dark' }
   let svg: string
   try {
     svg = renderTrail(spec)
@@ -130,6 +141,33 @@ async function render(trace: string | undefined, opts: RenderOptions): Promise<v
   writeFileSync(opts.output, svg + '\n')
 }
 
+interface CompareOptions extends OutputOptions {
+  leftTitle: string
+  leftColor?: string
+  leftHighlight?: string
+  rightTitle: string
+  rightColor?: string
+  rightHighlight?: string
+}
+
+async function compare(left: string, right: string, opts: CompareOptions): Promise<void> {
+  if (left === '-' && right === '-') throw new CliError('Only one of LEFT and RIGHT can read stdin', 2)
+  const side = (file: string, name: 'left' | 'right', title: string, color?: string, highlight?: string): Panel => {
+    const panel: Panel = { trace: read(file, `${name} trace file`) }
+    if (title !== '') panel.title = title
+    if (color !== undefined) panel.color = color as ColorName
+    if (highlight !== undefined) panel.highlight = parseHighlight(highlight, `--${name}-highlight`)
+    checkPanel(panel, name === 'left' ? 'Left: ' : 'Right: ')
+    return panel
+  }
+  await write({
+    panels: [
+      side(left, 'left', opts.leftTitle, opts.leftColor, opts.leftHighlight),
+      side(right, 'right', opts.rightTitle, opts.rightColor, opts.rightHighlight),
+    ],
+  }, opts)
+}
+
 function buildProgram(): Command {
   const program = new Command('tracetrail')
     .description('Draw the route a trace takes through a directory tree as an SVG.')
@@ -139,7 +177,7 @@ function buildProgram(): Command {
       writeErr: (s) => process.stderr.write(s),
       outputError: (s, write) => write(`tracetrail: ${s.replace(/^error: /, '')}`),
     })
-    .addHelpText('after', `${EXAMPLES}\nRun "tracetrail render --help" for every option.\n`)
+    .addHelpText('after', `${EXAMPLES}\nRun "tracetrail render --help" or "tracetrail compare --help" for every option.\n`)
 
   program
     .command('render')
@@ -154,6 +192,25 @@ function buildProgram(): Command {
     .requiredOption('-o, --output <file>', 'where to write the image')
     .addHelpText('after', EXAMPLES)
     .action(render)
+
+  const colors = `${COLOR_NAMES.join(', ')} (default: blue, the same on both sides)`
+  const steps = '1-based: "3" for one step, "2-5" for a range (default: whole trace)'
+  program
+    .command('compare')
+    .description('Render two trace files side by side on the same tree, typically before and after a change.')
+    .argument('<left>', 'trace file drawn on the left; "-" reads stdin')
+    .argument('<right>', 'trace file drawn on the right; "-" reads stdin')
+    .option('--left-title <text>', 'title above the left panel; "" for none', 'before')
+    .option('--left-color <color>', `left highlight color: ${colors}`)
+    .option('--left-highlight <N|A-B>', `left steps drawn in color, ${steps}`)
+    .option('--right-title <text>', 'title above the right panel; "" for none', 'after')
+    .option('--right-color <color>', `right highlight color: ${colors}`)
+    .option('--right-highlight <N|A-B>', `right steps drawn in color, ${steps}`)
+    .option('--dark-mode', 'render the dark theme instead of the light one')
+    .option('--png', 'write a PNG instead of an SVG (also chosen by an output path ending in .png); needs a monospace font installed')
+    .requiredOption('-o, --output <file>', 'where to write the image')
+    .addHelpText('after', EXAMPLES)
+    .action(compare)
 
   return program
 }

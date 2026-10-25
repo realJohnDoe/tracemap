@@ -1,0 +1,6 @@
+# Upload before the fix: the size limit is never checked
+tests/test_upload.py        # Test uploads a 20 MB file
+src/api/upload.py           # Handler receives the file
+src/storage/disk.py         # File written to disk as is
+src/api/upload.py           # 201 returned
+tests/test_upload.py        # Test expected 413 and fails

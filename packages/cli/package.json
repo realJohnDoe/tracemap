@@ -11,7 +11,8 @@
     "test": "vp test run"
   },
   "dependencies": {
-    "@tracetrail/core": "*"
+    "@tracetrail/core": "*",
+    "commander": "^15.0.0"
   },
   "devDependencies": {
     "tsx": "^4.20.0",

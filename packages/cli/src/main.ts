@@ -1,31 +1,16 @@
 import { readFileSync, writeFileSync } from 'node:fs'
-import { parseArgs } from 'node:util'
+import { Command, CommanderError } from 'commander'
 import { COLOR_NAMES, parseTrace, renderTrail, type ColorName, type Panel, type TrailSpec } from '@tracetrail/core'
 
-const HELP = `tracetrail render: draw the route a trace takes through a directory tree as an SVG.
-
-Usage:
-  tracetrail render TRACE [--title T] [--color C] [--highlight N|A-B] -o out.svg
-  tracetrail render --spec trail.json -o out.svg
-
-TRACE is a trace file: one step per line, in order, naming a file or a directory
-(ending in "/"). Text after " # " is a note. Blank lines and lines starting with
-"#" are ignored. Use "-" to read the trace from stdin.
-
-Options:
-  --title T          Title drawn above the tree.
-  --color C          Highlight color: ${COLOR_NAMES.join(', ')}. Default: blue.
-  --highlight N|A-B  The steps drawn in color, as 1-based step numbers: "3" for one
-                     step, "2-5" for steps 2 to 5. Default: the whole trace.
-  --spec FILE        Read a trail spec as JSON instead of using TRACE and the flags
-                     above. Use "-" to read it from stdin.
-  -o, --output FILE  Where to write the SVG. Required.
-  -h, --help         Show this help.
-
+const EXAMPLES = `
 Examples:
   tracetrail render login.trace -o login.svg
   tracetrail render login.trace --title "Authentication" --color green --highlight 4-9 -o auth.svg
   tracetrail render --spec trail.json -o out.svg
+
+A trace file has one step per line, in order, naming a file or a directory (ending
+in "/"). Text after " # " is a note. Blank lines and lines starting with "#" are
+ignored.
 
 A trail spec is JSON, for example:
   {"panels": [{"trace": "src/a.ts # start\\nsrc/b.ts", "title": "T", "color": "red", "highlight": [1, 2]}]}
@@ -95,37 +80,27 @@ function specFromJson(text: string): TrailSpec {
   return spec as TrailSpec
 }
 
-function render(args: string[]): void {
-  const { values, positionals } = parseArgs({
-    args,
-    allowPositionals: true,
-    options: {
-      title: { type: 'string' },
-      color: { type: 'string' },
-      highlight: { type: 'string' },
-      spec: { type: 'string' },
-      output: { type: 'string', short: 'o' },
-      help: { type: 'boolean', short: 'h' },
-    },
-  })
-  if (values.help) {
-    process.stdout.write(HELP)
-    return
-  }
-  if (!values.output) throw new CliError('Missing -o/--output: say where to write the SVG', 2)
+interface RenderOptions {
+  title?: string
+  color?: string
+  highlight?: string
+  spec?: string
+  output: string
+}
 
+function render(trace: string | undefined, opts: RenderOptions): void {
   let spec: TrailSpec
-  if (values.spec !== undefined) {
-    if (positionals.length || values.title !== undefined || values.color !== undefined || values.highlight !== undefined) {
+  if (opts.spec !== undefined) {
+    if (trace !== undefined || opts.title !== undefined || opts.color !== undefined || opts.highlight !== undefined) {
       throw new CliError('--spec cannot be combined with TRACE, --title, --color or --highlight', 2)
     }
-    spec = specFromJson(read(values.spec, 'spec file'))
+    spec = specFromJson(read(opts.spec, 'spec file'))
   } else {
-    if (positionals.length !== 1) throw new CliError('Give exactly one TRACE file (or use --spec)', 2)
-    const panel: Panel = { trace: read(positionals[0], 'trace file') }
-    if (values.title !== undefined) panel.title = values.title
-    if (values.color !== undefined) panel.color = values.color as ColorName
-    if (values.highlight !== undefined) panel.highlight = parseHighlight(values.highlight)
+    if (trace === undefined) throw new CliError('Give exactly one TRACE file (or use --spec)', 2)
+    const panel: Panel = { trace: read(trace, 'trace file') }
+    if (opts.title !== undefined) panel.title = opts.title
+    if (opts.color !== undefined) panel.color = opts.color as ColorName
+    if (opts.highlight !== undefined) panel.highlight = parseHighlight(opts.highlight)
     checkPanel(panel, '')
     spec = { panels: [panel] }
   }
@@ -136,29 +111,52 @@ function render(args: string[]): void {
   } catch (e) {
     throw new CliError((e as Error).message)
   }
-  writeFileSync(values.output, svg + '\n')
+  writeFileSync(opts.output, svg + '\n')
+}
+
+function buildProgram(): Command {
+  const program = new Command('tracetrail')
+    .description('Draw the route a trace takes through a directory tree as an SVG.')
+    .exitOverride()
+    .configureOutput({
+      writeOut: (s) => process.stdout.write(s),
+      writeErr: (s) => process.stderr.write(s),
+      outputError: (s, write) => write(`tracetrail: ${s.replace(/^error: /, '')}`),
+    })
+    .addHelpText('after', `${EXAMPLES}\nRun "tracetrail render --help" for every option.\n`)
+
+  program
+    .command('render')
+    .description('Render a trace file, or a trail spec, to an SVG file.')
+    .argument('[trace]', 'trace file, one step per line; "-" reads stdin')
+    .option('--title <text>', 'title drawn above the tree')
+    .option('--color <color>', `highlight color: ${COLOR_NAMES.join(', ')} (default: blue)`)
+    .option('--highlight <N|A-B>', 'steps drawn in color, 1-based: "3" for one step, "2-5" for a range (default: whole trace)')
+    .option('--spec <file>', 'read a trail spec as JSON instead of TRACE and the flags above; "-" reads stdin')
+    .requiredOption('-o, --output <file>', 'where to write the SVG')
+    .addHelpText('after', EXAMPLES)
+    .action(render)
+
+  return program
 }
 
 /** Runs the command and returns the exit code. */
 export async function main(argv: string[]): Promise<number> {
-  const [command, ...rest] = argv
+  const program = buildProgram()
+  if (argv.length === 0) {
+    program.outputHelp()
+    return 2
+  }
   try {
-    if (!command || command === '--help' || command === '-h' || command === 'help') {
-      process.stdout.write(HELP)
-      return command ? 0 : 2
-    }
-    if (command !== 'render') throw new CliError(`Unknown command "${command}": the only command is render (see --help)`, 2)
-    render(rest)
+    program.parse(argv, { from: 'user' })
     return 0
   } catch (e) {
     if (e instanceof CliError) {
       process.stderr.write(`tracetrail: ${e.message}\n`)
       return e.code
     }
-    if ((e as { code?: string }).code?.startsWith('ERR_PARSE_ARGS')) {
-      process.stderr.write(`tracetrail: ${(e as Error).message} (see --help)\n`)
-      return 2
-    }
+    // Commander has already printed its own message; usage errors are 2, --help is 0.
+    if (e instanceof CommanderError) return e.exitCode === 0 ? 0 : 2
     throw e
   }
 }

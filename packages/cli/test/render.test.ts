@@ -88,12 +88,12 @@ describe('tracetrail render errors', () => {
     fails(/trace has no steps/, 1, 'render', f, '-o', o())
   })
   it('rejects a missing trace file', () => fails(/Cannot read trace file/, 1, 'render', join(tmp, 'nope.trace'), '-o', o()))
-  it('requires -o', () => fails(/Missing -o/, 2, 'render', exampleFile))
+  it('requires -o', () => fails(/required option '-o, --output <file>' not specified/, 2, 'render', exampleFile))
   it('requires a TRACE or --spec', () => fails(/exactly one TRACE/, 2, 'render', '-o', o()))
   it('rejects --spec combined with flags', () => fails(/cannot be combined/, 2, 'render', '--spec', specFile({}), '--color', 'red', '-o', o()))
   it('rejects an unknown flag and an unknown command', () => {
-    fails(/Unknown option/, 2, 'render', exampleFile, '--bogus', '-o', o())
-    fails(/Unknown command "draw"/, 2, 'draw')
+    fails(/unknown option '--bogus'/, 2, 'render', exampleFile, '--bogus', '-o', o())
+    fails(/unknown command 'draw'/, 2, 'draw')
   })
   it('rejects invalid specs', () => {
     const bad = join(tmp, 'bad.json')
@@ -108,10 +108,21 @@ describe('tracetrail render errors', () => {
 
 describe('tracetrail --help', () => {
   it('documents every flag with an example', () => {
-    for (const args of [['--help'], ['render', '--help']]) {
-      const r = run(...args)
-      expect(r.code).toBe(0)
-      for (const s of ['--title', '--color', '--highlight', '--spec', '-o, --output', 'Examples:', ...COLOR_NAMES]) expect(r.stdout).toContain(s)
-    }
+    const r = run('render', '--help')
+    expect(r.code).toBe(0)
+    for (const s of ['--title', '--color', '--highlight', '--spec', '-o, --output', 'Examples:', ...COLOR_NAMES]) expect(r.stdout).toContain(s)
+  })
+
+  it('points the top-level help at render', () => {
+    const r = run('--help')
+    expect(r.code).toBe(0)
+    expect(r.stdout).toContain('Examples:')
+    expect(r.stdout).toContain('tracetrail render --help')
+  })
+
+  it('shows help and exits 2 without arguments', () => {
+    const r = run()
+    expect(r.code).toBe(2)
+    expect(r.stdout).toContain('Usage: tracetrail')
   })
 })

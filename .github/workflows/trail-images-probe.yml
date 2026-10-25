@@ -1,0 +1,70 @@
+# Temporary probe for #14: can the Actions token upload trail images to a PR?
+# Remove before merging.
+name: Trail images probe
+
+on:
+  push:
+    branches: [ccr-ffb167fd-5x2cyi]
+    paths: [.github/workflows/trail-images-probe.yml]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: gh version
+        run: |
+          gh --version
+          if ! gh pr edit --help | grep -q -- --attach; then
+            sh skills/pr-trail-images/scripts/install-gh.sh
+            echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          fi
+
+      - name: Render a trail image
+        run: |
+          dir="$RUNNER_TEMP/trail"
+          mkdir -p "$dir"
+          printf '%s\n' \
+            'packages/cli/bin/tracetrail.js' \
+            'packages/cli/src/main.ts' \
+            'packages/core/src/trace.ts' \
+            'packages/core/src/render.ts' \
+            'packages/cli/src/main.ts' > "$dir/flow.trace"
+          npx tracetrail render "$dir/flow.trace" --title "Probe: tracetrail render" -o "$dir/trail-1.svg"
+          echo "TRAIL_DIR=$dir" >> "$GITHUB_ENV"
+
+      - name: Upload directly with the Actions token
+        continue-on-error: true
+        run: |
+          repo_id=$(gh api "repos/$GITHUB_REPOSITORY" --jq .id)
+          curl -sS -X POST \
+            "https://uploads.github.com/user-attachments/assets?name=trail-1.svg&content_type=image%2Fsvg%2Bxml&repository_id=$repo_id" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Content-Type: application/octet-stream" \
+            -H "Accept: application/vnd.github+json" \
+            --data-binary "@$TRAIL_DIR/trail-1.svg" -w '\nHTTP %{http_code}\n'
+
+      - name: Attach with gh pr edit, as the skill does
+        run: |
+          gh --version
+          cd "$TRAIL_DIR"
+          printf '%s\n' '## Trail images (probe)' '' \
+            'Temporary: tests whether the Actions token can attach trail images (#14). It will be removed.' '' \
+            '![Probe route through cli and core](./trail-1.svg)' > section.md
+          gh pr view "$PR" --json body --jq .body > old-body.md
+          node "$GITHUB_WORKSPACE/skills/pr-trail-images/scripts/splice-body.mjs" section.md < old-body.md > body.md
+          gh pr edit "$PR" --body-file body.md --attach ./trail-1.svg
+          gh pr view "$PR" --json body --jq .body | sed -n '/tracetrail:start/,/tracetrail:end/p'

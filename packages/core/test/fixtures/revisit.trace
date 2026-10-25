@@ -1,0 +1,5 @@
+app/main.py            # start
+app/services/auth.py   # authenticate
+app/models/user.py     # lookup
+app/services/auth.py   # back in the service
+app/                   # directory step

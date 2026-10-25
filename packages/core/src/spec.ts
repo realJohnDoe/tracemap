@@ -22,13 +22,13 @@ export interface Panel {
 
 /** The complete description of one trail image (ADR-0003). */
 export interface TrailSpec {
-  /** Two panels are side by side (ADR-0005), which is not rendered yet. */
+  /** Two panels are drawn side by side on the same tree (ADR-0005). */
   panels: [Panel] | [Panel, Panel]
   /** Defaults to light. */
   theme?: Theme
 }
 
-interface Palette {
+export interface Palette {
   background: string
   ink: string
   neutralLine: string

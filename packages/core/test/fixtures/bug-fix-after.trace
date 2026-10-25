@@ -1,0 +1,7 @@
+# Upload after the fix: the handler checks the size limit first
+tests/test_upload.py        # Test uploads a 20 MB file
+src/api/upload.py           # Handler receives the file
+src/validation/limits.py    # Size checked against the 10 MB limit
+src/api/errors.py           # 413 response built
+src/api/upload.py           # 413 returned
+tests/test_upload.py        # Test asserts 413

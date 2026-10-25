@@ -1,9 +1,11 @@
-import { PALETTES, type Panel, type TrailSpec } from './spec'
-import { buildTree, parseTrace, type Row } from './trace'
+import { PALETTES, type Palette, type Panel, type TrailSpec } from './spec'
+import { buildTree, parseTrace, type Row, type Step } from './trace'
 
 const ROW = 28, IND = 16, PADL = 34, PADT = 18, CW = 7.8, PADR = 16
 const TITLE_SIZE = 14, TITLE_H = 30
 const CORNER = 6
+// space between two panels side by side, with a neutral divider in its middle
+const GAP = 32
 
 const FONT = "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace"
 
@@ -41,23 +43,30 @@ function rounded(points: Point[]): string {
   return d + 'L' + f(P[P.length - 1])
 }
 
-function renderPanel(panel: Panel, theme: keyof typeof PALETTES): string {
-  const steps = parseTrace(panel.trace)
-  if (!steps.length) return ''
-  const rows = buildTree(steps)
-  const pal = PALETTES[theme]
+interface DrawnPanel {
+  width: number
+  /** SVG elements in the panel's own coordinates, without the background. */
+  body: string[]
+  /** What the highlight covers, for the image's aria-label. */
+  what: string
+}
+
+/**
+ * Draws one panel on a tree that may hold more paths than its own trace visits.
+ * `top` is where the tree starts, so panels side by side keep their rows aligned.
+ */
+function drawPanel(panel: Panel, steps: Step[], rows: Row[], top: number, pal: Palette): DrawnPanel {
   const color = pal.colors[panel.color ?? 'blue']
   const title = panel.title?.trim() ?? ''
 
-  // The highlight as zero-based step indices, whole trace by default.
+  // The highlight as zero-based step indices, whole trace by default; empty when there are no steps.
   const n = steps.length
   const clamp = (k: number) => Math.min(Math.max(Math.round(k), 1), n)
   const [a, b] = panel.highlight ?? [1, n]
-  const lo = clamp(Math.min(a, b)) - 1, hi = clamp(Math.max(a, b)) - 1
+  const lo = n ? clamp(Math.min(a, b)) - 1 : 0, hi = n ? clamp(Math.max(a, b)) - 1 : -1
 
   const byPath = new Map(rows.map((r) => [r.path, r]))
   const rowOf = (k: number) => byPath.get(steps[k].path)!
-  const top = PADT + (title ? TITLE_H : 0)
   const X = (r: Row) => PADL + r.depth * IND
   const Y = (r: Row) => top + r.row * ROW + ROW / 2
   const RX = PADL - IND
@@ -81,13 +90,9 @@ function renderPanel(panel: Panel, theme: keyof typeof PALETTES): string {
     else right = Math.max(right, X(r) + 11 + labelLen(r) * CW)
   }
   const W = Math.ceil(right + PADR)
-  const H = top + rows.length * ROW + PADT
 
-  const what = lo === hi ? `step ${lo + 1} of ${n} highlighted` : `steps ${lo + 1} to ${hi + 1} of ${n} highlighted`
-  const label = (title ? title + ': ' : '') + 'Trace through the directory tree, ' + what
+  const what = !n ? 'no steps' : lo === hi ? `step ${lo + 1} of ${n} highlighted` : `steps ${lo + 1} to ${hi + 1} of ${n} highlighted`
   const o: string[] = []
-  o.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="${FONT}" font-size="13" role="img" aria-label="${esc(label)}">`)
-  o.push(`<rect width="${W}" height="${H}" fill="${pal.background}"/>`)
   if (title) o.push(`<text x="${RX}" y="${PADT + TITLE_SIZE}" font-size="${TITLE_SIZE}" font-weight="600" fill="${pal.ink}">${esc(title)}</text>`)
 
   // row tint behind every row the highlight visits
@@ -148,7 +153,7 @@ function renderPanel(panel: Panel, theme: keyof typeof PALETTES): string {
   if (hl) o.push(line(hl, color, 3.5))
 
   // a disc where the highlight starts, a target where it ends, a dot on every other visited row
-  const start = rowOf(lo), end = rowOf(hi)
+  const start = n ? rowOf(lo) : null, end = n ? rowOf(hi) : null
   for (const r of rows) {
     if (!nums.has(r)) continue
     const x = X(r), y = Y(r)
@@ -174,15 +179,43 @@ function renderPanel(panel: Panel, theme: keyof typeof PALETTES): string {
     o.push(`<rect x="${px(p.x)}" y="${y - 8}" width="${px(p.w)}" height="16" rx="8" fill="${pal.background}" stroke="${color}" stroke-width="1.6"/>`)
     o.push(`<text x="${px(p.x + p.w / 2)}" y="${y + 3.8}" text-anchor="middle" font-size="11" font-weight="600" fill="${color}">${p.txt}</text>`)
   }
-  o.push('</svg>')
-  return o.join('')
+  return { width: W, body: o, what }
 }
 
 /**
  * Trail spec in, SVG out: the public seam the web app, the CLI and the golden tests all run through.
- * Returns an empty string when the panel's trace has no steps.
+ * Two panels are drawn side by side on one tree built from both traces, so their rows line up (ADR-0005).
+ * Returns an empty string when no panel's trace has any steps.
  */
 export function renderTrail(spec: TrailSpec): string {
-  if (spec.panels.length > 1) throw new Error('Side by side panels are not supported yet')
-  return renderPanel(spec.panels[0], spec.theme ?? 'light')
+  const pal = PALETTES[spec.theme ?? 'light']
+  const traces = spec.panels.map((p) => parseTrace(p.trace))
+  if (!traces.some((t) => t.length)) return ''
+  const rows = buildTree(traces.flat())
+  const top = PADT + (spec.panels.some((p) => p.title?.trim()) ? TITLE_H : 0)
+  const drawn = spec.panels.map((p, i) => drawPanel(p, traces[i], rows, top, pal))
+  const H = top + rows.length * ROW + PADT
+
+  const titleOf = (i: number) => spec.panels[i].title?.trim() ?? ''
+  let W: number, label: string
+  if (drawn.length === 1) {
+    W = drawn[0].width
+    label = (titleOf(0) ? titleOf(0) + ': ' : '') + 'Trace through the directory tree, ' + drawn[0].what
+  } else {
+    W = drawn[0].width + GAP + drawn[1].width
+    const side = (i: number) => (titleOf(i) || (i ? 'right' : 'left')) + ': ' + drawn[i].what
+    label = 'Two traces side by side on the same directory tree. ' + side(0) + '; ' + side(1)
+  }
+
+  const o: string[] = []
+  o.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="${FONT}" font-size="13" role="img" aria-label="${esc(label)}">`)
+  o.push(`<rect width="${W}" height="${H}" fill="${pal.background}"/>`)
+  o.push(...drawn[0].body)
+  if (drawn.length > 1) {
+    const x = drawn[0].width + GAP / 2
+    o.push(`<path d="M${x} ${PADT}L${x} ${H - PADT}" stroke="${pal.neutralLine}" stroke-width="1"/>`)
+    o.push(`<g transform="translate(${drawn[0].width + GAP} 0)">`, ...drawn[1].body, '</g>')
+  }
+  o.push('</svg>')
+  return o.join('')
 }

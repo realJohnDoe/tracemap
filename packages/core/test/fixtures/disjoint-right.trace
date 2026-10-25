@@ -1,0 +1,3 @@
+src/reports/builder.ts      # Report assembled
+src/reports/pdf.ts          # Rendered to PDF
+src/notify/                 # Notification queued

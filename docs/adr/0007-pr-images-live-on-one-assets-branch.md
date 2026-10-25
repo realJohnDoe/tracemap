@@ -1,0 +1,3 @@
+# PR images live on one assets branch in the target repo
+
+GitHub has no API for uploading images into a pull request description; drag-and-drop uploads only work in the browser. The agent skill therefore commits trail images, together with the trace files and trail specs that produced them, to a single `tracetrail-assets` branch in the target repository, one folder per pull request (`pr-<n>/`), and links them from the PR body by raw URL. One branch for all PRs avoids cluttering the repo with branches; committing into the PR branch itself was rejected because it pollutes the diff, and CI artifacts were rejected because they do not render inline. Keeping the inputs lets images be re-rendered later without recreating the trace.

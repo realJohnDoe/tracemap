@@ -1,6 +1,6 @@
 ---
 name: pr-trail-images
-description: Add trail images to a pull request description, drawing the route the PR's behaviour takes through the directory tree. Use when asked to add, update or refresh trail images on a PR, or when the repo's CLAUDE.md/AGENTS.md says to use this skill on PRs. Decides whether images help and how many (1 to 5), writes trace files, renders them with `tracetrail render`, and attaches them with `gh pr edit --attach`.
+description: Add trail images to a pull request description, drawing the route the PR's behaviour takes through the directory tree. Use when asked to add, update or refresh trail images on a PR, or when the repo's CLAUDE.md/AGENTS.md says to use this skill on PRs. Decides whether images help and how many (1 to 5), writes trace files, renders them with `tracetrail render`, and attaches them with `gh pr edit --attach` (or, where uploads are blocked, commits them to a `tracetrail-assets` branch).
 ---
 
 # PR trail images
@@ -10,15 +10,15 @@ Adds one to five trail images to a pull request description, or none when they w
 ## Hard rules
 
 - **At most five images per PR.** If more seem necessary, make the trace coarser (directories instead of files, fewer steps) instead.
-- **Never commit or push anything for the images.** No assets branch, no files in the PR branch. Trace files and SVGs live in a temporary directory outside the repo and are thrown away afterwards.
+- **Never commit images to the PR branch** or anywhere in the working tree. Trace files and SVGs live in a temporary directory outside the repo and are thrown away afterwards. The only thing ever pushed is the `tracetrail-assets` branch, and only through `push-assets.sh` (step 5).
 - **Only touch the trail image section** of the PR description (between `<!-- tracetrail:start -->` and `<!-- tracetrail:end -->`). Everything else in the body stays byte for byte.
-- **No fallback.** If `gh` cannot be brought to 2.99+ (step 1), is not authenticated, or the upload fails, the PR gets no image. Say so and stop; do not link images some other way.
+- **One fallback, no others.** Upload with `gh --attach` where it works; otherwise use the assets branch (step 5). If neither works, the PR gets no image. Say so and stop; do not link images any other way.
 
 ## 1. Check the tools
 
 ```sh
-gh --version            # needs 2.99 or newer for --attach
-gh auth status          # needs a valid token with push access to the repo
+gh --version            # 2.99 or newer can upload with --attach
+gh auth status          # a valid token with push access can upload
 npx tracetrail --help   # in this repo: run from the workspace root after npm install
 ```
 
@@ -28,19 +28,24 @@ If `gh` is missing or older than 2.99, install the latest release (Linux or macO
 sh skills/pr-trail-images/scripts/install-gh.sh
 ```
 
-It installs `gh` into `~/.local/bin` and prints that path. If `~/.local/bin` is not first in `PATH`, call `~/.local/bin/gh` instead of `gh` in the steps below. It uses the same credentials (`GH_TOKEN` or the `gh` config), so installing does not fix a missing or invalid token. If the install fails (no network to github.com, another OS), stop and report it.
+It installs `gh` into `~/.local/bin` and prints that path. If `~/.local/bin` is not first in `PATH`, call `~/.local/bin/gh` instead of `gh` in the steps below. If the install fails (no network to github.com, another OS), stop and report it.
+
+Then pick how images will reach the PR:
+
+- **Upload** when `gh auth status` succeeds. This works locally, in Codex and in GitHub Actions with a personal token, and for private repos.
+- **Assets branch** otherwise, for example in Claude Code cloud sessions, where a proxy adds credentials but blocks uploads (`gh auth status` fails there although `git push` and `gh api` work). The images are committed to a `tracetrail-assets` branch and linked by commit.
+
+Use `gh api` (REST) to read and write the PR in both cases: `gh pr view`, `gh pr diff` and `gh pr edit` use GraphQL, which some sandboxes block; `gh pr edit --attach` is used only when uploading works.
 
 In this repo the CLI runs from the workspace (`npx tracetrail`, which resolves to `packages/cli`), not from npm. Elsewhere use `npx trace-trail` once it is published.
-
-If `gh` is not authenticated, stop here and report it. Rendering images that cannot be attached is wasted work.
 
 ## 2. Read the PR and decide
 
 Read the PR's description and diff:
 
 ```sh
-gh pr view <n> --json number,title,body,headRefName,baseRefName
-gh pr diff <n>
+gh api repos/{owner}/{repo}/pulls/<n> --jq '.title, .body'
+gh api repos/{owner}/{repo}/pulls/<n> -H 'Accept: application/vnd.github.diff'
 ```
 
 Then decide, aiming for whatever makes the PR easiest for a human reviewer to follow:
@@ -101,7 +106,7 @@ Look at the SVGs before attaching them if you can (for example a headless-browse
 
 ## 5. Write the section and update the PR
 
-Write the section in `$dir/section.md`. Image references are relative (`./trail-1.svg`), and `gh` rewrites them to the uploaded `user-attachments` URLs. Each image gets a short caption tied to the PR text: what the reader should look at, in the PR's own terms.
+Write the section in `$dir/section.md`. Image references are relative (`./trail-1.svg`); both ways of attaching rewrite them to real URLs. Each image gets a short caption tied to the PR text: what the reader should look at, in the PR's own terms.
 
 ```markdown
 ## Trail images
@@ -113,22 +118,41 @@ Write the section in `$dir/section.md`. Image references are relative (`./trail-
 
 Use the alt text to describe the route in words. Keep captions to one or two sentences.
 
-Then splice the section into the current body and update the PR in one command. Keep `body.md` in `$dir`, because `gh` resolves the image paths relative to the body file's directory:
+Splice the section into the current body. Keep `body.md` in `$dir`, because `gh` resolves the image paths relative to the body file's directory:
 
 ```sh
-gh pr view <n> --json body --jq .body > "$dir/old-body.md"
+gh api repos/{owner}/{repo}/pulls/<n> --jq .body > "$dir/old-body.md"
 node skills/pr-trail-images/scripts/splice-body.mjs "$dir/section.md" < "$dir/old-body.md" > "$dir/body.md"
+```
+
+`splice-body.mjs` replaces the section between `<!-- tracetrail:start -->` and `<!-- tracetrail:end -->` (each on a line of its own) or appends one at the end, so **re-running the skill on the same PR replaces the images instead of adding more**.
+
+**Upload:**
+
+```sh
 gh pr edit <n> --body-file "$dir/body.md" --attach "$dir/trail-1.svg" --attach "$dir/trail-2.svg"
 ```
 
-`splice-body.mjs` replaces an existing `<!-- tracetrail:start -->…<!-- tracetrail:end -->` section or appends one at the end, so **re-running the skill on the same PR replaces the images instead of adding more**. If the new decision is "no images" on a PR that has a section, run it with an empty `section.md` to remove the section (and no `--attach`).
+Pass each image to `--attach` exactly once. If `gh` exits non-zero, some uploads failed: report which, and re-run the whole step rather than patching the body by hand. If it fails before uploading anything because the environment blocks it, use the assets branch instead.
 
-Pass each image to `--attach` exactly once. If `gh` exits non-zero, some uploads failed: report which, and re-run the whole step rather than patching the body by hand.
+**Assets branch:**
+
+```sh
+sh skills/pr-trail-images/scripts/push-assets.sh <n> "$dir/trail-1.svg" "$dir/trail-2.svg" > "$dir/urls.txt"
+while read -r file url; do
+  sed -i.bak "s#(./$(basename "$file"))#($url)#" "$dir/body.md"
+done < "$dir/urls.txt"
+gh api -X PATCH repos/{owner}/{repo}/pulls/<n> -F body=@"$dir/body.md" --silent
+```
+
+`push-assets.sh` commits the images to `pr-<n>/` on the `tracetrail-assets` branch (created on first use, without touching the working tree or the current branch), replacing that PR's earlier images, retries if another PR pushed at the same time, and prints `<file> <url>` per image. The URLs name the commit, so a re-run never shows a cached old image.
+
+**No images any more:** if the new decision is "no images" on a PR that has a section, splice with an empty `section.md`, update the body without attachments, and on the assets branch run `push-assets.sh <n>` without files to remove the PR's folder.
 
 ## 6. Check and report
 
 ```sh
-gh pr view <n> --json body --jq .body
+gh api repos/{owner}/{repo}/pulls/<n> --jq .body
 ```
 
-The section should contain `https://github.com/user-attachments/assets/…` URLs, not `./trail-N.svg`. Reply with how many images were added and why that number, or why none. Then delete `$dir`.
+The section should contain `https://github.com/user-attachments/assets/…` (upload) or `https://github.com/<owner>/<repo>/raw/<commit>/pr-<n>/…` (assets branch) URLs, not `./trail-N.svg`. Reply with how many images were added and why that number, or why none. Then delete `$dir`.

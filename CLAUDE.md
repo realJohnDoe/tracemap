@@ -4,7 +4,7 @@
 
 ## Trail images on PRs
 
-After opening a pull request here, or pushing changes to one, use the `pr-trail-images` skill (`skills/pr-trail-images/`, linked into `.claude/skills/`) to add or refresh trail images in its description. The skill decides whether images help; if `gh` is not authenticated, skip it and say so in your reply.
+After opening a pull request here, or pushing changes to one, use the `pr-trail-images` skill (`skills/pr-trail-images/`, linked into `.claude/skills/`) to add or refresh trail images in its description. The skill decides whether images help and how they reach the PR; if it cannot attach them, say so in your reply.
 
 ## Design docs
 

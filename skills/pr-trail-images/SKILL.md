@@ -14,7 +14,7 @@ Decisions this skill follows: ADR-0007 (images are attached with `gh --attach`, 
 - **At most five images per PR.** If more seem necessary, make the trace coarser (directories instead of files, fewer steps) instead.
 - **Never commit or push anything for the images.** No assets branch, no files in the PR branch. Trace files and SVGs live in a temporary directory outside the repo and are thrown away afterwards.
 - **Only touch the trail image section** of the PR description (between `<!-- tracetrail:start -->` and `<!-- tracetrail:end -->`). Everything else in the body stays byte for byte.
-- **No fallback.** If `gh` is older than 2.99, not authenticated, or the upload fails, the PR gets no image. Say so and stop; do not link images some other way.
+- **No fallback.** If `gh` cannot be brought to 2.99+ (step 1), is not authenticated, or the upload fails, the PR gets no image. Say so and stop; do not link images some other way.
 
 ## 1. Check the tools
 
@@ -24,9 +24,17 @@ gh auth status          # needs a valid token with push access to the repo
 npx tracetrail --help   # in this repo: run from the workspace root after npm install
 ```
 
+If `gh` is missing or older than 2.99, install the latest release (Linux or macOS, no root needed):
+
+```sh
+sh skills/pr-trail-images/scripts/install-gh.sh
+```
+
+It installs `gh` into `~/.local/bin` and prints that path. If `~/.local/bin` is not first in `PATH`, call `~/.local/bin/gh` instead of `gh` in the steps below. It uses the same credentials (`GH_TOKEN` or the `gh` config), so installing does not fix a missing or invalid token. If the install fails (no network to github.com, another OS), stop and report it.
+
 In this repo the CLI runs from the workspace (`npx tracetrail`, which resolves to `packages/cli`), not from npm. Elsewhere use `npx trace-trail` once it is published.
 
-If `gh` is too old or not authenticated, stop here and report it. Rendering images that cannot be attached is wasted work.
+If `gh` is not authenticated, stop here and report it. Rendering images that cannot be attached is wasted work.
 
 ## 2. Read the PR and decide
 

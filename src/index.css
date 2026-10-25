@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+/* Theme tokens live in CSS variables so the generated SVG can reference them directly. */
+:root {
+  --bg: #eef1f4;
+  --panel: #f9fafb;
+  --ink: #1b2430;
+  --muted: #5d6877;
+  --faint: #b4bcc7;
+  --line: #d5dae1;
+  --trail: #2a5bd7;
+  --now: #d9531e;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #11161d; --panel: #171e27; --ink: #dde3ea; --muted: #93a0b0;
+    --faint: #3a4553; --line: #2a3340; --trail: #6e9bff; --now: #ff8a4c;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-trail: var(--trail);
+  --color-now: var(--now);
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-ink font-sans text-sm leading-normal;
+    padding-block: 20px 40px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  input[type="range"] { @apply w-full m-0; accent-color: var(--trail); }
+  :is(button, input, textarea, summary):focus-visible { outline: 2px solid var(--trail); outline-offset: 2px; }
+}

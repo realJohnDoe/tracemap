@@ -34,7 +34,7 @@ Read the change's description and diff, wherever the caller points you to them. 
 | Several independent flows (CLI and web app both changed, a producer and a consumer) | **One image per flow**, each with its own trace |
 | Bug fix or refactor whose route changed | Before/after comparison: **not yet available** (needs `tracetrail compare`). Until then, one image of the new route, or none |
 
-**Not applicable** when the route does not tell the reader anything: docs-only or config-only changes, dependency bumps, renames, formatting, a change confined to one file, test-only changes, or anything where every step would be the same file.
+**Not applicable** when the route does not tell the reader anything: prose-only docs, plain config, dependency bumps, renames, formatting, a change confined to one file, test-only changes, or anything where every step would be the same file. Files that steer behaviour count as part of a route even when they are not code: an agent skill that calls another skill, a workflow that runs a script, a hook. If following them gives an ordered run across several files, draw it.
 
 When unsure between N and N+1 images, choose fewer. One clear image beats three similar ones.
 

@@ -39,9 +39,12 @@ Titles default to `before` and `after` (`""` for none); both sides default to th
 
 Invalid input (unknown color, malformed or out-of-range highlight, empty trace, bad spec) prints a message to stderr and exits 1; usage errors exit 2. `tracetrail --help` lists everything with examples.
 
-## 🤖 Trail images in pull requests
+## 🤖 Illustrate docs and pull requests with agents
 
-Trace Trail ships an agent skill, `skills/tracetrail-pr/`, that adds trail images to pull request descriptions. To have agents use it in another repo, add a sentence like this to that repo's `CLAUDE.md` or `AGENTS.md`:
+Trace Trail ships two agent skills:
+
+- `skills/tracetrail-images/` draws trail images, with a short description each, for anything you want to explain: a README, an ADR, a tutorial, an onboarding guide, an issue or a design note. Ask an agent something like "illustrate how a request flows through the server for the docs" and it writes the images (and the text to go with them) into a directory you name.
+- `skills/tracetrail-pr/` uses it to add trail images to pull request descriptions. To have agents do this in another repo (copy both skills), add a sentence like this to that repo's `CLAUDE.md` or `AGENTS.md`:
 
 > After opening a pull request, or pushing changes to one, use the `tracetrail-pr` skill to add or refresh trail images in its description.
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { COLOR_NAMES, EXAMPLE, parseTrace, renderTrail, type ColorName, type Panel, type Theme, type TrailSpec } from '@tracetrail/core'
+import { COLOR_NAMES, EXAMPLE, ShareError, cliCommand, decodeShareFragment, encodeShareFragment, normalizeSpec, parseTrace, renderTrail, type ColorName, type Panel, type Theme, type TrailSpec } from '@tracetrail/core'
 import { download, serializeSvg, svgToPngBlob } from './lib/export'
 
 const btn = 'cursor-pointer rounded-md border border-line bg-panel px-3 py-[5px] text-[13px] text-ink hover:border-trail'
@@ -27,6 +27,8 @@ const SIDES: [Side, Side] = [
   { trace: EXAMPLE, title: 'before', color: 'blue', highlight: null },
   { trace: EXAMPLE_AFTER, title: 'after', color: 'blue', highlight: null },
 ]
+
+const toSide = (p: Panel): Side => ({ trace: p.trace, title: p.title ?? '', color: p.color ?? 'blue', highlight: p.highlight ?? null })
 
 const toPanel = (s: Side): Panel => ({ trace: s.trace, title: s.title || undefined, color: s.color, highlight: s.highlight ?? undefined })
 
@@ -80,6 +82,9 @@ export default function App() {
   const [playing, setPlaying] = useState(false)
   const [status, setStatus] = useState('')
   const [svgSource, setSvgSource] = useState<string | null>(null)
+  const [shareError, setShareError] = useState('')
+  // The address is only rewritten once an incoming share link has been read, so opening one never loses it.
+  const [linkRead, setLinkRead] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
 
   const steps = useMemo(() => parseTrace(text), [text])
@@ -95,6 +100,51 @@ export default function App() {
     [mode, sides, text, title, color, highlight, theme],
   )
   const svg = useMemo(() => renderTrail(spec), [spec])
+
+  const applySpec = (next: TrailSpec) => {
+    setPlaying(false)
+    setTheme(next.theme ?? 'light')
+    if (next.panels.length === 2) {
+      setMode('compare')
+      setSides([toSide(next.panels[0]), toSide(next.panels[1])])
+    } else {
+      const side = toSide(next.panels[0])
+      setMode('single')
+      setText(side.trace); setTitle(side.title); setColor(side.color); setHighlight(side.highlight)
+    }
+  }
+
+  // Opening a share link restores its view; a link that cannot be read leaves the example in place.
+  useEffect(() => {
+    let current = true
+    const open = async () => {
+      if (!location.hash.startsWith('#t=')) return setLinkRead(true)
+      try {
+        const next = await decodeShareFragment(location.hash)
+        if (!current) return
+        applySpec(next)
+        setShareError('')
+      } catch (e) {
+        if (!current) return
+        setShareError(`${e instanceof ShareError ? e.message : 'The link could not be read.'} Showing the example instead.`)
+      }
+      setLinkRead(true)
+    }
+    open()
+    const onHash = () => { if (location.hash.startsWith('#t=')) setLinkRead(false), open() }
+    window.addEventListener('hashchange', onHash)
+    return () => { current = false; window.removeEventListener('hashchange', onHash) }
+  }, [])
+
+  // Keep the address in step with the view so the page URL is always a share link.
+  useEffect(() => {
+    if (!linkRead || !svg) return
+    let current = true
+    encodeShareFragment(spec).then((f) => {
+      if (current && location.hash.slice(1) !== f) history.replaceState(null, '', '#' + f)
+    })
+    return () => { current = false }
+  }, [linkRead, spec, svg])
 
   // Play advances a one-step highlight through the trace.
   useEffect(() => {
@@ -165,6 +215,39 @@ export default function App() {
     }
   }
 
+  const copyLink = async () => {
+    const fragment = await encodeShareFragment(spec)
+    const url = location.origin + location.pathname + location.search + '#' + fragment
+    try {
+      await navigator.clipboard.writeText(url)
+      setSvgSource(null)
+      setStatus('Share link copied to the clipboard.')
+    } catch {
+      setSvgSource(url)
+      setStatus('Clipboard is blocked here. The share link is shown below, copy it manually.')
+    }
+  }
+  const copyCommand = async () => {
+    const command = cliCommand(spec)
+    try {
+      await navigator.clipboard.writeText(command)
+      setSvgSource(null)
+      setStatus(`CLI command copied. Run it on ${spec.panels.length === 1 ? 'trace.trace' : 'left.trace and right.trace'}; use Download trace files to get them.`)
+    } catch {
+      setSvgSource(command)
+      setStatus('Clipboard is blocked here. The command is shown below, copy it manually.')
+    }
+  }
+  const downloadText = (name: string, type: string, text: string) => {
+    download(name, `data:${type};charset=utf-8,` + encodeURIComponent(text))
+    setStatus(`Export of ${name} started.`)
+  }
+  const saveSpec = () => downloadText('trail.json', 'application/json', JSON.stringify(normalizeSpec(spec), null, 2) + '\n')
+  const saveTraces = () => {
+    const names = spec.panels.length === 1 ? ['trace.trace'] : ['left.trace', 'right.trace']
+    spec.panels.forEach((p, i) => setTimeout(() => downloadText(names[i], 'text/plain', p.trace), i * 200))
+  }
+
   const s = single ? steps[from - 1] : undefined
   const switchMode = (m: 'single' | 'compare') => { setPlaying(false); setMode(m) }
   const modeBtn = (m: 'single' | 'compare', name: string) => (
@@ -189,6 +272,8 @@ export default function App() {
           </label>
         </div>
       </header>
+
+      {shareError && <p role="alert" className="m-0 rounded-lg border border-line bg-panel px-4 py-2.5 text-[13px] text-now">{shareError}</p>}
 
       {mode === 'compare' ? (
         <section aria-label="Trail spec" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -255,7 +340,7 @@ export default function App() {
       </div>
 
       <details className="rounded-lg border border-line bg-panel px-4 py-2.5">
-        <summary className="cursor-pointer font-medium">{mode === 'single' ? 'Trace input and export' : 'Export'}</summary>
+        <summary className="cursor-pointer font-medium">{mode === 'single' ? 'Trace input, export and share' : 'Export and share'}</summary>
         <div className="mt-2.5 flex flex-col gap-2.5">
           {mode === 'single' && (<>
           <p className="m-0 max-w-[70ch] text-xs text-muted">
@@ -280,9 +365,15 @@ export default function App() {
             <button className={btn} onClick={savePng}>Download PNG</button>
             <button className={btn} onClick={saveSvg}>Download SVG</button>
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button className={btn} onClick={copyLink}>Copy share link</button>
+            <button className={btn} onClick={copyCommand}>Copy CLI command</button>
+            <button className={btn} onClick={saveSpec}>Download trail spec</button>
+            <button className={btn} onClick={saveTraces}>Download trace files</button>
+          </div>
           <div className="min-h-[1.4em] text-xs text-muted" role="status">{status}</div>
           {svgSource && (
-            <textarea className={`${area} min-h-[120px]`} aria-label="SVG source" readOnly value={svgSource}
+            <textarea className={`${area} min-h-[120px]`} aria-label="Text to copy" readOnly value={svgSource}
               onFocus={(e) => e.currentTarget.select()} />
           )}
         </div>

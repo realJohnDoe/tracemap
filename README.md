@@ -7,7 +7,7 @@ Draws the route a trace takes through a directory tree, with one highlighted int
 An npm workspaces monorepo (see [ADR-0001](./docs/adr/0001-workspaces-with-shared-core-and-cli-only-on-npm.md)):
 
 - `packages/core`: private `@tracetrail/core`. Parsing, tree layout and SVG rendering, with no DOM dependency. Its public interface is the trail spec type and `renderTrail`, which takes a trail spec and returns SVG; it is tested against golden SVG fixtures in `packages/core/test/fixtures/`.
-- `packages/cli`: the `tracetrail` command (published later as `trace-trail`), with core bundled in. It runs from the workspace without a build step.
+- `packages/cli`: the `tracetrail` command, published to npm as `trace-trail` with core bundled in. It runs from the workspace without a build step; `npm run build -w trace-trail` bundles it into `packages/cli/dist/` for publishing.
 - `apps/web`: the React web app. Browser-only helpers (SVG/PNG export, clipboard) live here.
 - `skills/`: agent skills, see [PR skill](#pr-skill).
 
@@ -65,6 +65,18 @@ Invalid input (unknown color, malformed or out-of-range highlight, empty trace, 
 ## Design
 
 Trace Trail is growing into a web app plus a CLI (`npx trace-trail`) that agents use to add trail images to pull requests, both sharing one renderer. The vocabulary is in [GLOSSARY.md](./GLOSSARY.md) and the decisions behind the layout are in [docs/adr/](./docs/adr/).
+
+## Releasing the CLI
+
+`.github/workflows/release.yml` publishes `trace-trail` to npm when a `v*` tag is pushed ([ADR-0001](./docs/adr/0001-workspaces-with-shared-core-and-cli-only-on-npm.md)). It authenticates with npm trusted publishing, so there is no token in the repo. It typechecks, runs the tests, bundles the CLI and publishes with provenance. The package contains only `bin/`, the `dist/` bundle, the README and the licence.
+
+One-time setup (needs the npm account): publish the name once (for example `npm publish -w trace-trail` from a logged-in machine), then on npmjs.com open the package's **Settings → Trusted publisher**, choose GitHub Actions and enter repository `realJohnDoe/tracetrail` and workflow `release.yml`.
+
+To release:
+
+1. Set `version` in `packages/cli/package.json` and commit it to `main`.
+2. `git tag v<version> && git push origin v<version>`; the tag must equal the version or the workflow fails.
+3. When the workflow is green, check `npx trace-trail@<version> render TRACE -o out.svg` in an empty directory.
 
 ## Deployment
 

@@ -1,21 +1,45 @@
 {
   "name": "trace-trail",
-  "private": true,
   "version": "0.1.0",
+  "description": "Draw the route a trace takes through a directory tree, as an SVG or PNG trail image",
+  "keywords": ["trace", "directory-tree", "svg", "pull-request", "cli"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/realJohnDoe/tracetrail.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/realJohnDoe/tracetrail#readme",
+  "bugs": "https://github.com/realJohnDoe/tracetrail/issues",
   "type": "module",
   "bin": {
     "tracetrail": "./bin/tracetrail.js"
   },
+  "files": [
+    "bin",
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
+    "build": "node scripts/build.mjs",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vp test run"
   },
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
-    "@tracetrail/core": "*",
     "commander": "^15.0.0"
   },
   "devDependencies": {
+    "@tracetrail/core": "*",
+    "esbuild": "^0.28.2",
     "tsx": "^4.20.0",
     "typescript": "^7.0.2",
     "vite-plus": "1.4.0"

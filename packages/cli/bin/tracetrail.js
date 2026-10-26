@@ -1,7 +1,15 @@
 #!/usr/bin/env node
-// Runs the TypeScript sources straight from the workspace, so no build step is needed.
-import { register } from 'tsx/esm/api'
+// In the workspace, runs the TypeScript sources straight away, so no build step is needed.
+// In the published package there is no src/, so it runs the bundle from `npm run build`.
+import { existsSync } from 'node:fs'
 
-register()
-const { main } = await import('../src/main.ts')
+let entry
+if (existsSync(new URL('../src/main.ts', import.meta.url))) {
+  const { register } = await import('tsx/esm/api')
+  register()
+  entry = '../src/main.ts'
+} else {
+  entry = '../dist/main.js'
+}
+const { main } = await import(entry)
 process.exitCode = await main(process.argv.slice(2))

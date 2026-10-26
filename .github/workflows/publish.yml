@@ -1,0 +1,26 @@
+# Publishes with npm trusted publishing (OIDC), so no token is stored. Configure the trusted
+# publisher on npmjs.com: owner realJohnDoe, repository tracemap, workflow publish.yml.
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm test -w @realjohndoe/tracemap
+      - run: npm run build -w @realjohndoe/tracemap
+      - run: npm publish -w @realjohndoe/tracemap --access public

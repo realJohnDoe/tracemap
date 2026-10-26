@@ -1,37 +1,16 @@
-# Trace Trail
+# 🌲 Trace Trail
 
-Draws the route a trace takes through a directory tree, with one highlighted interval of steps. Built with [Vite+](https://viteplus.dev), React, TypeScript and Tailwind CSS v4.
+Draws the route a trace takes through a directory tree, with one highlighted interval of steps. Use it to show which files a piece of behaviour touches, and in what order.
 
-## Web app
+![The Trace Trail web app showing a highlighted route through a directory tree](./docs/images/web-app.png)
 
-Try it at **https://realjohndoe.github.io/tracetrail/**. Paste a trace, pick the highlight, color and theme, compare two traces side by side, and export the result as SVG or PNG. **Copy share link** gives a URL that restores the exact view, and **Copy CLI command** and **Download trail spec** give you the same image from the [CLI](#cli) ([ADR-0011](./docs/adr/0011-share-links-are-a-deflate-compressed-trail-spec-in-the-url-fragment.md)). It is a static site, see [Deployment](#deployment).
+## 🌐 Web app
 
-## Layout
+Try it at **https://realjohndoe.github.io/tracetrail/**. Paste a trace, pick the highlight, color and theme, compare two traces side by side, and export the result as SVG or PNG. **Copy share link** gives a URL that restores the exact view, and **Copy CLI command** and **Download trail spec** give you the same image from the [CLI](#-cli) ([ADR-0011](./docs/adr/0011-share-links-are-a-deflate-compressed-trail-spec-in-the-url-fragment.md)).
 
-An npm workspaces monorepo (see [ADR-0001](./docs/adr/0001-workspaces-with-shared-core-and-cli-only-on-npm.md)):
+## 💻 CLI
 
-- `packages/core`: private `@tracetrail/core`. Parsing, tree layout and SVG rendering, with no DOM dependency. Its public interface is the trail spec type and `renderTrail`, which takes a trail spec and returns SVG; it is tested against golden SVG fixtures in `packages/core/test/fixtures/`.
-- `packages/cli`: the `tracetrail` command (published later as `trace-trail`), with core bundled in. It runs from the workspace without a build step.
-- `apps/web`: the React web app. Browser-only helpers (SVG/PNG export, clipboard) live here.
-- `skills/`: agent skills, see [PR skill](#pr-skill).
-
-## Commands
-
-Run from the repo root:
-
-```sh
-npm install
-npm run dev        # web app dev server (vp dev)
-npm run typecheck  # tsc in every workspace
-npm test           # golden-SVG tests (vp test)
-npm run build      # production build into apps/web/dist/
-```
-
-After an intended rendering change, regenerate the golden SVGs with `UPDATE_GOLDEN=1 npm test` and review the diff.
-
-## CLI
-
-After `npm install`, run the CLI from the repo root with `npx tracetrail`. `render` draws a trace file as an SVG (or PNG):
+`render` draws a trace file as an SVG (or PNG):
 
 ```sh
 tracetrail render TRACE [--title T] [--color C] [--highlight N|A-B] [--dark-mode] [--png] -o out.svg
@@ -60,19 +39,12 @@ Titles default to `before` and `after` (`""` for none); both sides default to th
 
 Invalid input (unknown color, malformed or out-of-range highlight, empty trace, bad spec) prints a message to stderr and exits 1; usage errors exit 2. `tracetrail --help` lists everything with examples.
 
-## PR skill
+## 🤖 Trail images in pull requests
 
-`skills/tracetrail-pr/` is the agent skill that adds trail images to pull request descriptions (ADR-0007, ADR-0008). It is linked into `.claude/skills/` so Claude Code sessions in this repo find it, and it calls the CLI from the workspace. It uploads images with `gh` 2.99+ (installing the latest release into `~/.local/bin` if needed). Where uploads are blocked, as in Claude Code cloud sessions, it commits them to a `tracetrail-assets` branch instead and links them by commit (ADR-0007). To have agents use it in another repo, add a sentence like this to that repo's `CLAUDE.md` or `AGENTS.md`:
+Trace Trail ships an agent skill, `skills/tracetrail-pr/`, that adds trail images to pull request descriptions. To have agents use it in another repo, add a sentence like this to that repo's `CLAUDE.md` or `AGENTS.md`:
 
 > After opening a pull request, or pushing changes to one, use the `tracetrail-pr` skill to add or refresh trail images in its description.
 
-## Design
+## 🛠️ Contributing
 
-Trace Trail is growing into a web app plus a CLI (`npx trace-trail`) that agents use to add trail images to pull requests, both sharing one renderer. The vocabulary is in [GLOSSARY.md](./GLOSSARY.md) and the decisions behind the layout are in [docs/adr/](./docs/adr/).
-
-## Deployment
-
-Pushing to `main` runs `.github/workflows/deploy.yml`, which builds the app and publishes `apps/web/dist/` to GitHub Pages.
-One-time setup: in the repo, go to **Settings → Pages** and set **Source** to **GitHub Actions**.
-
-The build uses a relative `base` (`./`), so it works under `/tracetrail/` without further configuration.
+Want to work on the code? See [CONTRIBUTING.md](./CONTRIBUTING.md). The vocabulary is in [GLOSSARY.md](./GLOSSARY.md) and the decisions behind the design are in [docs/adr/](./docs/adr/).

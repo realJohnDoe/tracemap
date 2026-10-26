@@ -33,7 +33,7 @@ After `npm install`, run the CLI from the repo root with `npx tracetrail`.
 
 ## PR skill
 
-`skills/tracetrail-pr/` is the agent skill that adds trail images to pull request descriptions (ADR-0007, ADR-0008). It is linked into `.claude/skills/` so Claude Code sessions in this repo find it, and it calls the CLI from the workspace. It uploads images with `gh` 2.99+ (installing the latest release into `~/.local/bin` if needed). Where uploads are blocked, as in Claude Code cloud sessions, it commits them to a `tracetrail-assets` branch instead and links them by commit (ADR-0007).
+Two agent skills add trail images to pull request descriptions (ADR-0007, ADR-0008). `skills/tracetrail-images/` decides whether images help, writes the traces, renders them with the CLI from the workspace and writes the images and their description into a directory it is given; it knows nothing about pull requests. `skills/tracetrail-pr/` calls it, defines which files it must hand back, and gets them into the PR. Both are linked into `.claude/skills/` so Claude Code sessions in this repo find them. The PR skill uploads images with `gh` 2.99+ (installing the latest release into `~/.local/bin` if needed). Where uploads are blocked, as in Claude Code cloud sessions, it commits them to a `tracetrail-assets` branch instead and links them by commit (ADR-0007).
 
 ## Deployment
 

@@ -41,7 +41,7 @@ Invalid input (unknown color, malformed or out-of-range highlight, empty trace, 
 
 ## 🤖 Trail images in pull requests
 
-Trace Trail ships an agent skill, `skills/tracetrail-pr/`, that adds trail images to pull request descriptions. To have agents use it in another repo, add a sentence like this to that repo's `CLAUDE.md` or `AGENTS.md`:
+Trace Trail ships agent skills that add trail images to pull request descriptions: `skills/tracetrail-pr/` is the one to call, and it uses `skills/tracetrail-images/` to draw the images (copy both). To have agents use it in another repo, add a sentence like this to that repo's `CLAUDE.md` or `AGENTS.md`:
 
 > After opening a pull request, or pushing changes to one, use the `tracetrail-pr` skill to add or refresh trail images in its description.
 

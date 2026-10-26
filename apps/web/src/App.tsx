@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { COLOR_NAMES, ShareError, cliCommand, decodeShareFragment, encodeShareFragment, normalizeSpec, parseTrace, renderTrail, type ColorName, type Panel, type Theme, type TrailSpec } from '@tracetrail/core'
-import { COMPARE_EXAMPLE, SINGLE_EXAMPLE } from './examples'
+import { COMPARE_EXAMPLE, SINGLE_EXAMPLE, SINGLE_HIGHLIGHT } from './examples'
 import { download, serializeSvg, svgToPngBlob } from './lib/export'
 
 const btn = 'cursor-pointer rounded-md border border-line bg-panel px-3 py-[5px] text-[13px] text-ink hover:border-trail'
@@ -19,8 +19,8 @@ interface Side {
 
 // Same defaults as `tracetrail compare`: titled before and after, both sides in the same color.
 const SIDES: [Side, Side] = [
-  { trace: COMPARE_EXAMPLE.before, title: 'before', color: 'blue', highlight: null },
-  { trace: COMPARE_EXAMPLE.after, title: 'after', color: 'blue', highlight: null },
+  { trace: COMPARE_EXAMPLE.before, title: 'before', color: 'blue', highlight: COMPARE_EXAMPLE.beforeHighlight },
+  { trace: COMPARE_EXAMPLE.after, title: 'after', color: 'blue', highlight: COMPARE_EXAMPLE.afterHighlight },
 ]
 
 const toSide = (p: Panel): Side => ({ trace: p.trace, title: p.title ?? '', color: p.color ?? 'blue', highlight: p.highlight ?? null })
@@ -70,7 +70,7 @@ export default function App() {
   const [sides, setSides] = useState<[Side, Side]>(SIDES)
   const [text, setText] = useState(SINGLE_EXAMPLE)
   // Trail spec fields; a null highlight means the whole trace.
-  const [highlight, setHighlight] = useState<[number, number] | null>(null)
+  const [highlight, setHighlight] = useState<[number, number] | null>(SINGLE_HIGHLIGHT)
   const [color, setColor] = useState<ColorName>('blue')
   const [title, setTitle] = useState('')
   const [theme, setTheme] = useState<Theme>('light')
@@ -352,7 +352,7 @@ export default function App() {
               f.text().then(loadText)
               e.target.value = ''
             }} />
-            <button className={btn} onClick={() => loadText(SINGLE_EXAMPLE)}>Reset example</button>
+            <button className={btn} onClick={() => { loadText(SINGLE_EXAMPLE); setHighlight(SINGLE_HIGHLIGHT) }}>Reset example</button>
           </div>
           </>)}
           <div className="flex flex-wrap items-center gap-2">

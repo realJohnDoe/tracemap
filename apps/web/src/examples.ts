@@ -19,6 +19,9 @@ src/web/hooks/useCart.ts                 # Optimistic state replaced by the serv
 src/web/components/CartBadge.tsx         # Item count in the header updated
 `
 
+/** The server-side business logic, from the service to the cart row: steps 6 to 10. */
+export const SINGLE_HIGHLIGHT: [number, number] = [6, 10]
+
 const BEFORE = `# Trace: GET /api/products/42, no caching
 src/web/pages/ProductPage.tsx            # Page asks for the product
 src/api/routes/products.ts               # Route handler getProduct() is selected
@@ -42,4 +45,10 @@ src/web/pages/ProductPage.tsx            # Page renders
 `
 
 /** Compare mode: the same request before and after a cache was added (the repository and database drop out of the hot path). */
-export const COMPARE_EXAMPLE = { before: BEFORE, after: AFTER }
+export const COMPARE_EXAMPLE = {
+  before: BEFORE,
+  after: AFTER,
+  // What changed: the service's work with the repository and database (3 to 7) versus with the cache (3 to 5).
+  beforeHighlight: [3, 7] as [number, number],
+  afterHighlight: [3, 5] as [number, number],
+}

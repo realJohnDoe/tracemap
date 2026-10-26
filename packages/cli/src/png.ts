@@ -6,7 +6,7 @@ const SCALE = 2
 const PROBE = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="20" font-family="${FONT_FAMILY}" font-size="13"><text x="0" y="14">Mm</text></svg>`
 
 /**
- * Converts a trail image SVG to PNG bytes with resvg (ADR-0010). The native addon is imported here,
+ * Converts a trace map SVG to PNG bytes with resvg (ADR-0010). The native addon is imported here,
  * not at the top of the CLI, so the default SVG path never loads it.
  * Throws when no monospace font is installed, since resvg would draw an image without text.
  */

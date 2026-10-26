@@ -1,4 +1,4 @@
-import { PALETTES, type Palette, type Panel, type TrailSpec } from './spec'
+import { PALETTES, type Palette, type Panel, type TraceMapSpec } from './spec'
 import { buildTree, parseTrace, type Row, type Step } from './trace'
 
 const ROW = 28, IND = 16, PADL = 34, PADT = 18, CW = 7.8, PADR = 16
@@ -113,13 +113,13 @@ function drawPanel(panel: Panel, steps: Step[], rows: Row[], top: number, pal: P
   }
   o.push(line(tree, pal.neutralLine, 2))
 
-  // tree node circles, under the route
+  // tree node circles, under the trace line
   for (const r of rows) {
     if (nums.has(r)) continue
     o.push(`<circle cx="${X(r)}" cy="${Y(r)}" r="2.5" fill="${pal.neutralLine}"/>`)
   }
 
-  // The route runs along the tree's own rails: up from p to the common ancestor, then down to q.
+  // The trace line runs along the tree's own rails: up from p to the common ancestor, then down to q.
   const seg = (p: Row, q: Row): string => {
     if (p === q) return ''
     const anc = (m: Row) => { const c: Row[] = []; for (let x: Row | null = m; x; x = x.parent) c.push(x); return c }
@@ -183,11 +183,11 @@ function drawPanel(panel: Panel, steps: Step[], rows: Row[], top: number, pal: P
 }
 
 /**
- * Trail spec in, SVG out: the public seam the web app, the CLI and the golden tests all run through.
+ * Trace map spec in, SVG out: the public seam the web app, the CLI and the golden tests all run through.
  * Two panels are drawn side by side on one tree built from both traces, so their rows line up (ADR-0005).
  * Returns an empty string when no panel's trace has any steps.
  */
-export function renderTrail(spec: TrailSpec): string {
+export function renderTraceMap(spec: TraceMapSpec): string {
   const pal = PALETTES[spec.theme ?? 'light']
   const traces = spec.panels.map((p) => parseTrace(p.trace))
   if (!traces.some((t) => t.length)) return ''

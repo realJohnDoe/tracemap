@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vite-plus/test'
-import { COLOR_NAMES, EXAMPLE, cliCommand, normalizeSpec, renderTrail, type TrailSpec } from '@tracetrail/core'
+import { COLOR_NAMES, EXAMPLE, cliCommand, normalizeSpec, renderTraceMap, type TraceMapSpec } from '@tracetrail/core'
 
 const bin = fileURLToPath(new URL('../bin/tracetrail.js', import.meta.url))
 const fixture = (f: string) => fileURLToPath(new URL(`../../core/test/fixtures/${f}`, import.meta.url))
@@ -70,14 +70,14 @@ describe('tracetrail render against the core golden SVGs', () => {
   it('applies --dark-mode to a --spec', () => {
     const o = out()
     expect(run('render', '--spec', specFile({ panels: [{ trace: EXAMPLE }] }), '--dark-mode', '-o', o).code).toBe(0)
-    expect(readFileSync(o, 'utf8')).toBe(renderTrail({ panels: [{ trace: EXAMPLE }], theme: 'dark' }) + '\n')
+    expect(readFileSync(o, 'utf8')).toBe(renderTraceMap({ panels: [{ trace: EXAMPLE }], theme: 'dark' }) + '\n')
   })
 
   it('renders --spec byte-identically to core', () => {
-    const spec: TrailSpec = { panels: [{ trace: EXAMPLE, title: 'Authentication', color: 'red', highlight: [4, 9] }] }
+    const spec: TraceMapSpec = { panels: [{ trace: EXAMPLE, title: 'Authentication', color: 'red', highlight: [4, 9] }] }
     const o = out()
     expect(run('render', '--spec', specFile(spec), '-o', o).code).toBe(0)
-    expect(readFileSync(o, 'utf8')).toBe(renderTrail(spec) + '\n')
+    expect(readFileSync(o, 'utf8')).toBe(renderTraceMap(spec) + '\n')
   })
 
   it('renders the same SVG from flags and from --spec', () => {
@@ -187,10 +187,10 @@ describe('tracetrail compare against the core golden SVGs', () => {
     const left = readFileSync(fixture('bug-fix-before.trace'), 'utf8'), right = readFileSync(fixture('bug-fix-after.trace'), 'utf8')
     run('compare', fixture('bug-fix-before.trace'), fixture('bug-fix-after.trace'),
       '--left-highlight', '2-4', '--right-color', 'green', '--right-title', '', '-o', a)
-    const spec: TrailSpec = { panels: [{ trace: left, title: 'before', highlight: [2, 4] }, { trace: right, color: 'green' }] }
+    const spec: TraceMapSpec = { panels: [{ trace: left, title: 'before', highlight: [2, 4] }, { trace: right, color: 'green' }] }
     expect(run('render', '--spec', specFile(spec), '-o', b).code).toBe(0)
     expect(readFileSync(a, 'utf8')).toBe(readFileSync(b, 'utf8'))
-    expect(readFileSync(b, 'utf8')).toBe(renderTrail(spec) + '\n')
+    expect(readFileSync(b, 'utf8')).toBe(renderTraceMap(spec) + '\n')
   })
 })
 
@@ -246,7 +246,7 @@ describe('tracetrail --help', () => {
 })
 
 describe('commands and specs exported by the web app', () => {
-  const specs: TrailSpec[] = [
+  const specs: TraceMapSpec[] = [
     { panels: [{ trace: EXAMPLE, title: "Bob's login", color: 'green', highlight: [4, 99] }], theme: 'dark' },
     { panels: [{ trace: EXAMPLE, title: 'before' }, { trace: EXAMPLE + 'src/new.py # added\n', title: '', highlight: [2, 5] }] },
   ]
@@ -258,12 +258,12 @@ describe('commands and specs exported by the web app', () => {
     const words = cliCommand(spec).match(/'(?:[^']|'\\'')*'|\S+/g)!.map((w) => w.startsWith("'") ? w.slice(1, -1).replace(/'\\''/g, "'") : w)
     const r = spawnSync(process.execPath, [bin, ...words.slice(1)], { encoding: 'utf8', cwd: dir })
     expect(r.status).toBe(0)
-    expect(readFileSync(join(dir, 'trail.svg'), 'utf8')).toBe(renderTrail(spec) + '\n')
+    expect(readFileSync(join(dir, 'trace-map.svg'), 'utf8')).toBe(renderTraceMap(spec) + '\n')
   })
 
-  it.each(specs)('the downloaded trail spec works with --spec', (spec) => {
+  it.each(specs)('the downloaded trace map spec works with --spec', (spec) => {
     const o = out()
     expect(run('render', '--spec', specFile(normalizeSpec(spec)), '-o', o).code).toBe(0)
-    expect(readFileSync(o, 'utf8')).toBe(renderTrail(spec) + '\n')
+    expect(readFileSync(o, 'utf8')).toBe(renderTraceMap(spec) + '\n')
   })
 })

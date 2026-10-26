@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test'
-import { EXAMPLE, cliCommand, decodeShareFragment, encodeShareFragment, renderTrail, type TrailSpec } from '../src'
+import { EXAMPLE, cliCommand, decodeShareFragment, encodeShareFragment, renderTraceMap, type TraceMapSpec } from '../src'
 
-const specs: Record<string, TrailSpec> = {
+const specs: Record<string, TraceMapSpec> = {
   single: { panels: [{ trace: EXAMPLE, title: 'Auth', color: 'green', highlight: [4, 9] }], theme: 'dark' },
   whole: { panels: [{ trace: EXAMPLE }] },
   compare: { panels: [{ trace: EXAMPLE, title: 'before' }, { trace: EXAMPLE + 'src/new.py # added\n', title: '', color: 'red', highlight: [2, 2] }] },
@@ -12,12 +12,12 @@ describe('share links', () => {
     it(`round trip gives the same image: ${name}`, async () => {
       const fragment = await encodeShareFragment(spec)
       expect(fragment).toMatch(/^t=1\.[A-Za-z0-9_-]+$/)
-      expect(renderTrail(await decodeShareFragment('#' + fragment))).toBe(renderTrail(spec))
+      expect(renderTraceMap(await decodeShareFragment('#' + fragment))).toBe(renderTraceMap(spec))
     })
   }
 
   it('clamps a highlight beyond the trace so the spec works with --spec', async () => {
-    const spec: TrailSpec = { panels: [{ trace: 'a.ts\nb.ts', highlight: [2, 9] }] }
+    const spec: TraceMapSpec = { panels: [{ trace: 'a.ts\nb.ts', highlight: [2, 9] }] }
     expect((await decodeShareFragment(await encodeShareFragment(spec))).panels[0].highlight).toEqual([2, 2])
   })
 
@@ -31,15 +31,15 @@ describe('share links', () => {
 
 describe('cliCommand', () => {
   it('names only the settings that differ from the defaults', () => {
-    expect(cliCommand({ panels: [{ trace: 'a\nb' }] })).toBe('tracetrail render trace.trace -o trail.svg')
-    expect(cliCommand(specs.single)).toBe("tracetrail render trace.trace --title Auth --color green --highlight 4-9 --dark-mode -o trail.svg")
+    expect(cliCommand({ panels: [{ trace: 'a\nb' }] })).toBe('tracetrail render trace.trace -o trace-map.svg')
+    expect(cliCommand(specs.single)).toBe("tracetrail render trace.trace --title Auth --color green --highlight 4-9 --dark-mode -o trace-map.svg")
   })
 
   it('quotes titles for the shell', () => {
-    expect(cliCommand({ panels: [{ trace: 'a', title: "it's a trail" }] })).toBe(`tracetrail render trace.trace --title 'it'\\''s a trail' -o trail.svg`)
+    expect(cliCommand({ panels: [{ trace: 'a', title: "it's a trail" }] })).toBe(`tracetrail render trace.trace --title 'it'\\''s a trail' -o trace-map.svg`)
   })
 
   it('compares two files and keeps the before and after titles by default', () => {
-    expect(cliCommand(specs.compare)).toBe("tracetrail compare left.trace right.trace --right-title '' --right-color red --right-highlight 2 -o trail.svg")
+    expect(cliCommand(specs.compare)).toBe("tracetrail compare left.trace right.trace --right-title '' --right-color red --right-highlight 2 -o trace-map.svg")
   })
 })

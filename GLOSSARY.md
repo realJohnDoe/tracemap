@@ -1,6 +1,6 @@
 # Trace Trail
 
-Trace Trail draws the route a piece of behaviour takes through a codebase's directory tree, so a reader can see which files are involved and in what order. It is used from a web app and from a CLI that agents call to illustrate pull requests.
+Trace Trail draws a trace as a trace map: the codebase's directory tree with the steps of one piece of behaviour highlighted, so a reader can see which files are involved and in what order. It is used from a web app and from a CLI that agents call to illustrate pull requests.
 
 ## Input
 
@@ -22,13 +22,17 @@ _Avoid_: Trace log, input file
 
 ## Picture
 
+**Trace map**:
+The visualization: a tree with one trace's highlight drawn on it, or two of them side by side. It is what a reader sees in a pull request, a doc or the web app, and what an agent adds to illustrate a change or explain a flow.
+_Avoid_: Trail, diagram, graph, chart
+
 **Tree**:
 The directory tree built from every path in the traces being drawn. Paths that no highlighted step visits are still part of the tree.
 _Avoid_: File list, outline
 
-**Route**:
+**Trace line**:
 The line that connects consecutive steps of a trace along the tree's own branches.
-_Avoid_: Path (means a file path here), trail, edge
+_Avoid_: Route (reads as a web-service route), path (means a file path here), trail, edge
 
 **Highlight**:
 The one contiguous interval of steps that is drawn in colour. A single step is an interval of one. Without an explicit highlight, the whole trace is highlighted.
@@ -43,15 +47,15 @@ The symbol at the start and at the end of a highlight. A highlight of one step h
 _Avoid_: Pin, dot, endpoint
 
 **Neutral grey**:
-How everything outside the highlight is drawn: the rest of the route and the tree alike, without distinguishing the two.
-_Avoid_: Faint route, unused path
+How everything outside the highlight is drawn: the rest of the trace line and the tree alike, without distinguishing the two.
+_Avoid_: Faint line, unused path
 
 **Color**:
 One of a fixed set of named colours (blue, red, green, orange, purple, gray) in which a highlight is drawn. A highlight in gray stays clearly distinct from neutral grey.
 _Avoid_: Hex, style
 
 **Theme**:
-Light or dark rendering of the whole image. Light is the default.
+Light or dark rendering of the whole trace map. Light is the default.
 _Avoid_: Mode, skin
 
 ## Images
@@ -61,21 +65,21 @@ One tree with one trace's highlight, a color and an optional title.
 _Avoid_: Graph, view, column
 
 **Side by side**:
-The only arrangement of two panels in one image: left and right, rows aligned, both drawn on the same tree.
+The only arrangement of two panels in one trace map: left and right, rows aligned, both drawn on the same tree.
 _Avoid_: Row layout, column layout, split view
 
 **Comparison**:
-An image of two panels side by side, typically before and after a change.
-_Avoid_: Diff (reserved for a possible future overlay image)
+A trace map of two panels side by side, typically before and after a change.
+_Avoid_: Diff (reserved for a possible future overlay trace map)
 
-**Trail spec**:
-The complete description of one image: its panels and its theme. The web app and the CLI both produce one, and the same trail spec always yields the same image.
+**Trace map spec**:
+The complete description of one trace map: its panels and its theme. The web app and the CLI both produce one, and the same trace map spec always yields the same image.
 _Avoid_: Config, options, settings
 
-**Trail image**:
-The rendered result of a trail spec, as SVG or PNG.
-_Avoid_: Screenshot, graph, chart
+**Image**:
+The rendered file of a trace map, as SVG or PNG. Say "image" only when the file is meant, for example "export the trace map as an image"; otherwise say trace map.
+_Avoid_: Trail image, screenshot
 
 **Share link**:
-A URL of the web app whose fragment holds a trail spec, so that opening it shows the same trail image.
+A URL of the web app whose fragment holds a trace map spec, so that opening it shows the same trace map.
 _Avoid_: Permalink, short link

@@ -1,10 +1,10 @@
-import { COLOR_NAMES, type Panel, type TrailSpec } from './spec'
+import { COLOR_NAMES, type Panel, type TraceMapSpec } from './spec'
 import { parseTrace } from './trace'
 
 /** Prefix of the share link fragment; the number is the format version (ADR-0011). */
 const PREFIX = 't=1.'
 
-/** Thrown when a share link or a spec cannot be turned into a trail spec. */
+/** Thrown when a share link or a spec cannot be turned into a trace map spec. */
 export class ShareError extends Error {}
 
 const toBase64Url = (bytes: Uint8Array): string => {
@@ -28,10 +28,10 @@ const pipe = async (data: Uint8Array, stream: CompressionStream | DecompressionS
 }
 
 /**
- * Makes a trail spec exact and portable: highlights are clamped to the trace, defaults are dropped
+ * Makes a trace map spec exact and portable: highlights are clamped to the trace, defaults are dropped
  * and empty titles removed, so the same image always gives the same JSON.
  */
-export function normalizeSpec(spec: TrailSpec): TrailSpec {
+export function normalizeSpec(spec: TraceMapSpec): TraceMapSpec {
   const panel = (p: Panel): Panel => {
     const out: Panel = { trace: p.trace }
     if (p.title) out.title = p.title
@@ -43,15 +43,15 @@ export function normalizeSpec(spec: TrailSpec): TrailSpec {
     }
     return out
   }
-  const panels = spec.panels.map(panel) as TrailSpec['panels']
+  const panels = spec.panels.map(panel) as TraceMapSpec['panels']
   return spec.theme === 'dark' ? { panels, theme: 'dark' } : { panels }
 }
 
-/** Checks parsed JSON and returns it as a trail spec, or throws a ShareError saying what is wrong. */
-export function checkSpec(raw: unknown): TrailSpec {
-  const spec = raw as Partial<TrailSpec> | null
+/** Checks parsed JSON and returns it as a trace map spec, or throws a ShareError saying what is wrong. */
+export function checkSpec(raw: unknown): TraceMapSpec {
+  const spec = raw as Partial<TraceMapSpec> | null
   if (!spec || typeof spec !== 'object' || !Array.isArray(spec.panels) || spec.panels.length < 1 || spec.panels.length > 2) {
-    throw new ShareError('The link does not hold a trail spec with one or two panels.')
+    throw new ShareError('The link does not hold a trace map spec with one or two panels.')
   }
   if (spec.theme !== undefined && spec.theme !== 'light' && spec.theme !== 'dark') throw new ShareError('The link holds an unknown theme.')
   for (const p of spec.panels as Partial<Panel>[]) {
@@ -63,19 +63,19 @@ export function checkSpec(raw: unknown): TrailSpec {
       throw new ShareError('The link holds a malformed highlight.')
     }
   }
-  return spec as TrailSpec
+  return spec as TraceMapSpec
 }
 
-/** The share link fragment (without the leading "#") for a trail spec (ADR-0011). */
-export async function encodeShareFragment(spec: TrailSpec): Promise<string> {
+/** The share link fragment (without the leading "#") for a trace map spec (ADR-0011). */
+export async function encodeShareFragment(spec: TraceMapSpec): Promise<string> {
   const json = new TextEncoder().encode(JSON.stringify(normalizeSpec(spec)))
   return PREFIX + toBase64Url(await pipe(json, new CompressionStream('deflate-raw')))
 }
 
 /** Reads a share link fragment (with or without the leading "#"); throws a ShareError if it is malformed or truncated. */
-export async function decodeShareFragment(fragment: string): Promise<TrailSpec> {
+export async function decodeShareFragment(fragment: string): Promise<TraceMapSpec> {
   const text = fragment.replace(/^#/, '')
-  if (!text.startsWith('t=')) throw new ShareError('The link does not hold a trail spec.')
+  if (!text.startsWith('t=')) throw new ShareError('The link does not hold a trace map spec.')
   if (!text.startsWith(PREFIX)) throw new ShareError('The link was made by a newer version of Trace Trail that this page cannot read.')
   let json: string
   try {
@@ -101,7 +101,7 @@ const quote = (s: string): string => (/^[A-Za-z0-9_./=:,@%+-]+$/.test(s) ? s : `
  * The `tracetrail render` or `tracetrail compare` command that draws the same SVG as the spec,
  * run on trace files named trace.trace (render) or left.trace and right.trace (compare).
  */
-export function cliCommand(spec: TrailSpec, output = 'trail.svg'): string {
+export function cliCommand(spec: TraceMapSpec, output = 'trace-map.svg'): string {
   const { panels, theme } = normalizeSpec(spec)
   const words: string[] = ['tracetrail']
   const add = (flag: string, value?: string) => words.push(flag, ...(value === undefined ? [] : [quote(value)]))

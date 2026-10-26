@@ -4,7 +4,7 @@
 
 ## Trace Trail on PRs
 
-After opening a pull request here, or pushing changes to one, use the `tracetrail-pr` skill (`skills/tracetrail-pr/`, linked into `.claude/skills/`) to add or refresh trail images in its description. The skill decides whether images help and how they reach the PR; if it cannot attach them, say so in your reply.
+After opening a pull request here, or pushing changes to one, use the `tracetrail-pr` skill (`skills/tracetrail-pr/`, linked into `.claude/skills/`) to add or refresh trace maps in its description. The skill decides whether images help and how they reach the PR; if it cannot attach them, say so in your reply.
 
 ## Design docs
 

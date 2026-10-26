@@ -1,17 +1,17 @@
 ---
 name: tracetrail-pr
-description: Use Trace Trail to add images to a pull request description that show the route the PR's behaviour takes through the directory tree (trail images). Use when asked to add, update or refresh Trace Trail or trail images on a PR, or when the repo's CLAUDE.md/AGENTS.md says to use this skill on PRs. Gets the images and their description from the `tracetrail-images` skill and attaches them with `gh pr edit --attach` (or, where uploads are blocked, commits them to a `tracetrail-assets` branch).
+description: Use Trace Trail to add images to a pull request description that show the steps the PR's behaviour takes through the directory tree (trace maps). Use when asked to add, update or refresh Trace Trail or trace maps on a PR, or when the repo's CLAUDE.md/AGENTS.md says to use this skill on PRs. Gets the images and their description from the `tracetrail-images` skill and attaches them with `gh pr edit --attach` (or, where uploads are blocked, commits them to a `tracetrail-assets` branch).
 ---
 
 # Trace Trail for pull requests
 
-Puts the trail images for a pull request into its description, or leaves them out when they would not help. Which images to draw and what to say about them is the job of the `tracetrail-images` skill; this skill defines what it must hand back and gets it into the PR.
+Puts the trace maps for a pull request into its description, or leaves them out when they would not help. Which images to draw and what to say about them is the job of the `tracetrail-images` skill; this skill defines what it must hand back and gets it into the PR.
 
 ## Hard rules
 
 - **At most five images per PR.** The `tracetrail-images` skill enforces this too; check it anyway.
 - **Never commit images to the PR branch** or anywhere in the working tree. Images and the section live in a temporary directory outside the repo and are thrown away afterwards. The only thing ever pushed is the `tracetrail-assets` branch, and only through `push-assets.sh` (step 4).
-- **Only touch the trail image section** of the PR description (between `<!-- tracetrail:start -->` and `<!-- tracetrail:end -->`). Everything else in the body stays byte for byte.
+- **Only touch the trace map section** of the PR description (between `<!-- tracetrail:start -->` and `<!-- tracetrail:end -->`). Everything else in the body stays byte for byte.
 - **One fallback, no others.** Upload with `gh --attach` where it works; otherwise use the assets branch (step 4). If neither works, the PR gets no image. Say so and stop; do not link images any other way.
 
 ## 1. Check the tools
@@ -55,18 +55,18 @@ Invoke the `tracetrail-images` skill (with the Skill tool, or by reading `skills
   ```
 - **Directory:** `$dir`.
 - **Files to write there:**
-  - `trail-1.svg`, `trail-2.svg`, … in the order the images appear, no gaps, at most five.
-  - `section.md`: the markdown that goes into the PR description. It shows each image exactly once, as `![alt](./trail-N.svg)` with a relative path, and links to nothing else. It carries no `<!-- tracetrail:… -->` markers; step 3 adds them.
+  - `trace-map-1.svg`, `trace-map-2.svg`, … in the order the images appear, no gaps, at most five.
+  - `section.md`: the markdown that goes into the PR description. It shows each image exactly once, as `![alt](./trace-map-N.svg)` with a relative path, and links to nothing else. It carries no `<!-- tracetrail:… -->` markers; step 3 adds them.
 - **Or nothing:** if no image would help, it writes no files and says the result is not applicable, with a sentence why.
 
 Check what comes back before going on:
 
-- **Files:** `section.md` exists, every `trail-N.svg` is referenced from it once and no other image is, the count is 1 to 5. If not, send it back to fix it.
-- **Not applicable:** `$dir` holds no `trail-*.svg`. Go on with an empty section (below) so that an old section from an earlier run is removed.
+- **Files:** `section.md` exists, every `trace-map-N.svg` is referenced from it once and no other image is, the count is 1 to 5. If not, send it back to fix it.
+- **Not applicable:** `$dir` holds no `trace-map-*.svg`. Go on with an empty section (below) so that an old section from an earlier run is removed.
 
 ## 3. Build the new body
 
-Image references stay relative (`./trail-1.svg`); both ways of attaching rewrite them to real URLs. Keep `body.md` in `$dir`, because `gh` resolves the image paths relative to the body file's directory. For "not applicable", create an empty `$dir/section.md` first.
+Image references stay relative (`./trace-map-1.svg`); both ways of attaching rewrite them to real URLs. Keep `body.md` in `$dir`, because `gh` resolves the image paths relative to the body file's directory. For "not applicable", create an empty `$dir/section.md` first.
 
 ```sh
 gh api repos/{owner}/{repo}/pulls/<n> --jq .body > "$dir/old-body.md"
@@ -80,7 +80,7 @@ node skills/tracetrail-pr/scripts/splice-body.mjs "$dir/section.md" < "$dir/old-
 **Upload:**
 
 ```sh
-gh pr edit <n> --body-file "$dir/body.md" --attach "$dir/trail-1.svg" --attach "$dir/trail-2.svg"
+gh pr edit <n> --body-file "$dir/body.md" --attach "$dir/trace-map-1.svg" --attach "$dir/trace-map-2.svg"
 ```
 
 Pass each image to `--attach` exactly once. If `gh` exits non-zero, some uploads failed: report which, and re-run the whole step rather than patching the body by hand. If it fails before uploading anything because the environment blocks it, use the assets branch instead.
@@ -88,7 +88,7 @@ Pass each image to `--attach` exactly once. If `gh` exits non-zero, some uploads
 **Assets branch:**
 
 ```sh
-sh skills/tracetrail-pr/scripts/push-assets.sh <n> "$dir/trail-1.svg" "$dir/trail-2.svg" > "$dir/urls.txt"
+sh skills/tracetrail-pr/scripts/push-assets.sh <n> "$dir/trace-map-1.svg" "$dir/trace-map-2.svg" > "$dir/urls.txt"
 while read -r file url; do
   sed -i.bak "s#(./$(basename "$file"))#($url)#" "$dir/body.md"
 done < "$dir/urls.txt"
@@ -105,4 +105,4 @@ gh api -X PATCH repos/{owner}/{repo}/pulls/<n> -F body=@"$dir/body.md" --silent
 gh api repos/{owner}/{repo}/pulls/<n> --jq .body
 ```
 
-The section should contain `https://github.com/user-attachments/assets/…` (upload) or `https://github.com/<owner>/<repo>/raw/<commit>/pr-<n>/…` (assets branch) URLs, not `./trail-N.svg`. Reply with how many images were added and why that number, or why none (the reason comes from `tracetrail-images`, in your reply, not in the PR body). Then delete `$dir`.
+The section should contain `https://github.com/user-attachments/assets/…` (upload) or `https://github.com/<owner>/<repo>/raw/<commit>/pr-<n>/…` (assets branch) URLs, not `./trace-map-N.svg`. Reply with how many images were added and why that number, or why none (the reason comes from `tracetrail-images`, in your reply, not in the PR body). Then delete `$dir`.

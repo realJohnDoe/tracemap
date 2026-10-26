@@ -2,13 +2,13 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { extname } from 'node:path'
 import { Command, CommanderError } from 'commander'
 import { svgToPng } from './png'
-import { COLOR_NAMES, parseTrace, renderTrail, type ColorName, type Panel, type TrailSpec } from '@tracetrail/core'
+import { COLOR_NAMES, parseTrace, renderTraceMap, type ColorName, type Panel, type TraceMapSpec } from '@tracetrail/core'
 
 const EXAMPLES = `
 Examples:
   tracetrail render login.trace -o login.svg
   tracetrail render login.trace --title "Authentication" --color green --highlight 4-9 -o auth.svg
-  tracetrail render --spec trail.json -o out.svg
+  tracetrail render --spec trace-map.json -o out.svg
   tracetrail render login.trace --dark-mode -o login-dark.svg
   tracetrail render login.trace --png -o login.png
   tracetrail compare old.trace new.trace --right-highlight 2-5 -o fix.svg
@@ -18,10 +18,10 @@ A trace file has one step per line, in order, naming a file or a directory (endi
 in "/"). Text after " # " is a note. Blank lines and lines starting with "#" are
 ignored.
 
-A trail spec is JSON, for example:
+A trace map spec is JSON, for example:
   {"panels": [{"trace": "src/a.ts # start\\nsrc/b.ts", "title": "T", "color": "red", "highlight": [1, 2]}]}
 
-A trail spec with two panels draws them side by side, like "compare".
+A trace map spec with two panels draws them side by side, like "compare".
 
 Exit codes: 0 on success, 1 on invalid input or a failed render, 2 on a usage error.
 `
@@ -67,14 +67,14 @@ function checkPanel(panel: Panel, where: string): void {
   }
 }
 
-function specFromJson(text: string): TrailSpec {
+function specFromJson(text: string): TraceMapSpec {
   let raw: unknown
   try {
     raw = JSON.parse(text)
   } catch (e) {
     throw new CliError(`The spec is not valid JSON: ${(e as Error).message}`)
   }
-  const spec = raw as Partial<TrailSpec> | null
+  const spec = raw as Partial<TraceMapSpec> | null
   if (!spec || !Array.isArray(spec.panels) || spec.panels.length < 1 || spec.panels.length > 2) {
     throw new CliError('The spec needs "panels": a list of one or two panels')
   }
@@ -85,7 +85,7 @@ function specFromJson(text: string): TrailSpec {
     }
     checkPanel(p, spec.panels!.length > 1 ? `Panel ${i + 1}: ` : '')
   })
-  return spec as TrailSpec
+  return spec as TraceMapSpec
 }
 
 interface RenderOptions extends OutputOptions {
@@ -96,7 +96,7 @@ interface RenderOptions extends OutputOptions {
 }
 
 async function render(trace: string | undefined, opts: RenderOptions): Promise<void> {
-  let spec: TrailSpec
+  let spec: TraceMapSpec
   if (opts.spec !== undefined) {
     if (trace !== undefined || opts.title !== undefined || opts.color !== undefined || opts.highlight !== undefined) {
       throw new CliError('--spec cannot be combined with TRACE, --title, --color or --highlight', 2)
@@ -121,12 +121,12 @@ interface OutputOptions {
   output: string
 }
 
-/** Renders the trail spec and writes it as SVG, or as PNG for --png or a .png output path. */
-async function write(spec: TrailSpec, opts: OutputOptions): Promise<void> {
+/** Renders the trace map spec and writes it as SVG, or as PNG for --png or a .png output path. */
+async function write(spec: TraceMapSpec, opts: OutputOptions): Promise<void> {
   if (opts.darkMode) spec = { ...spec, theme: 'dark' }
   let svg: string
   try {
-    svg = renderTrail(spec)
+    svg = renderTraceMap(spec)
   } catch (e) {
     throw new CliError((e as Error).message)
   }
@@ -170,7 +170,7 @@ async function compare(left: string, right: string, opts: CompareOptions): Promi
 
 function buildProgram(): Command {
   const program = new Command('tracetrail')
-    .description('Draw the route a trace takes through a directory tree as an SVG.')
+    .description('Draw a trace as a trace map (the directory tree with the steps highlighted) as an SVG.')
     .exitOverride()
     .configureOutput({
       writeOut: (s) => process.stdout.write(s),
@@ -181,12 +181,12 @@ function buildProgram(): Command {
 
   program
     .command('render')
-    .description('Render a trace file, or a trail spec, to an SVG or PNG file.')
+    .description('Render a trace file, or a trace map spec, to an SVG or PNG file.')
     .argument('[trace]', 'trace file, one step per line; "-" reads stdin')
     .option('--title <text>', 'title drawn above the tree')
     .option('--color <color>', `highlight color: ${COLOR_NAMES.join(', ')} (default: blue)`)
     .option('--highlight <N|A-B>', 'steps drawn in color, 1-based: "3" for one step, "2-5" for a range (default: whole trace)')
-    .option('--spec <file>', 'read a trail spec as JSON instead of TRACE and the flags above; "-" reads stdin')
+    .option('--spec <file>', 'read a trace map spec as JSON instead of TRACE and the flags above; "-" reads stdin')
     .option('--dark-mode', 'render the dark theme instead of the light one')
     .option('--png', 'write a PNG instead of an SVG (also chosen by an output path ending in .png); needs a monospace font installed')
     .requiredOption('-o, --output <file>', 'where to write the image')

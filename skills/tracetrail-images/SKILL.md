@@ -1,18 +1,23 @@
 ---
 name: tracetrail-images
-description: Use Trace Trail to draw trail images that show the route a change's behaviour takes through the directory tree, with a short description for each. Decides whether images help and how many (1 to 5), writes trace files, renders them with `tracetrail render`, and writes the images and their description into a directory the caller names. Normally called from another skill such as `tracetrail-pr`; use it directly when asked for trail images without a pull request.
+description: Use Trace Trail to draw trail images that show the route a piece of behaviour takes through a codebase's directory tree, with a short description for each. Use when asked to illustrate how something works or what a change touches in docs, READMEs, ADRs, tutorials, issues, design notes or onboarding guides, or when another skill such as `tracetrail-pr` asks for images. Decides whether images help and how many (1 to 5), writes trace files, renders them with `tracetrail render`, and writes the images and their description into a directory the caller or user names.
 ---
 
 # Trace Trail images
 
 Produces one to five trail images with a description each, or says that none would help. Terms: a **trace** is an ordered list of **steps** (file or directory paths with an optional **note**), a **highlight** is the one interval of steps drawn in colour, a **trail image** is the rendered result.
 
-This skill does not publish anything. The caller tells you which change to illustrate, which directory to write into and what the files must be called and look like. If the caller gives none of this, ask.
+This skill does not publish anything. It is used in two ways:
+
+- **From another skill** (for example `tracetrail-pr`), which tells you what to illustrate, which directory to write into and what the files must be called and look like. Follow that.
+- **Directly**, for a doc, README, ADR, tutorial, issue, design note or onboarding guide: a request such as "show how a request flows through the server" or "illustrate the checkout flow in this tutorial". You then decide the rest: write the images into the directory the user names (ask if they did not and it is not obvious, for example next to the document), as `trail-1.svg`, `trail-2.svg`, … plus `section.md` with the descriptions, and offer to paste the section into the document. Name the files for what they show instead (`checkout-flow.svg`) when they will live in a docs folder.
+
+What is illustrated can be a change (a diff, a PR, a commit) or existing behaviour that has no diff at all.
 
 ## Hard rules
 
 - **At most five images.** If more seem necessary, make the trace coarser (directories instead of files, fewer steps) instead.
-- **Write only into the caller's directory.** Trace files and SVGs never go into the working tree, and the working tree is left as you found it.
+- **Write only into the named directory.** Trace files and scratch work never go into the working tree. The images and description go where the caller or user says, even inside the repo when it is for a doc; nothing else in the working tree changes.
 - **Two outcomes, nothing in between.** Either the files are written, or nothing is written and you say the result is **not applicable**, with one sentence why. Never a partial set.
 
 ## 1. Check the tool
@@ -25,16 +30,16 @@ In this repo the CLI runs from the workspace (`npx tracetrail`, which resolves t
 
 ## 2. Read the change and decide
 
-Read the change's description and diff, wherever the caller points you to them. Then decide, aiming for whatever makes the change easiest for a human reviewer to follow:
+Read what is to be illustrated: for a change, its description and diff, wherever the caller points you to them; for existing behaviour, the code it runs through. Then decide, aiming for whatever makes it easiest for the reader (a reviewer, a new contributor, someone following a tutorial) to follow:
 
-| Change shape | Images |
+| Subject | Images |
 | --- | --- |
-| Small change along one flow (a bug fix in a handler, a new option threaded through) | **1**: the whole trace highlighted |
-| Long feature along one flow | **One trace, 2–5 images**, each highlighting a consecutive segment (e.g. steps 1–6 "request in", 7–12 "persistence", 13–17 "response"). Same trace file every time, so the tree is identical and the reader sees where each segment sits |
+| Small change or small behaviour along one flow (a bug fix in a handler, a new option threaded through) | **1**: the whole trace highlighted |
+| Long feature or flow | **One trace, 2–5 images**, each highlighting a consecutive segment (e.g. steps 1–6 "request in", 7–12 "persistence", 13–17 "response"). Same trace file every time, so the tree is identical and the reader sees where each segment sits |
 | Several independent flows (CLI and web app both changed, a producer and a consumer) | **One image per flow**, each with its own trace |
 | Bug fix or refactor whose route changed | Before/after comparison: **not yet available** (needs `tracetrail compare`). Until then, one image of the new route, or none |
 
-**Not applicable** when the route does not tell the reader anything: prose-only docs, plain config, dependency bumps, renames, formatting, a change confined to one file, test-only changes, or anything where every step would be the same file. Files that steer behaviour count as part of a route even when they are not code: an agent skill that calls another skill, a workflow that runs a script, a hook. If following them gives an ordered run across several files, draw it.
+**Not applicable** when the route does not tell the reader anything: prose-only docs, plain config, dependency bumps, renames, formatting, a change confined to one file, test-only changes, or anything where every step would be the same file. Files that steer behaviour count as part of a route even when they are not code: an agent skill that calls another skill, a workflow that runs a script, a hook. If following them gives an ordered run across several files, draw it. When the user asked for the images directly, lean towards drawing them: say if you think they add little, but do not refuse a clear request.
 
 When unsure between N and N+1 images, choose fewer. One clear image beats three similar ones.
 
@@ -77,9 +82,9 @@ Look at the SVGs if you can (for example a headless-browser screenshot); fix the
 
 ## 5. Write the description
 
-Each image gets a description above it, so a reader can follow the picture without decoding it: a bold title, then a short paragraph (about 3–6 sentences) that walks the highlighted route by its step numbers in the change's own terms, says which steps the change touches, and names what is drawn in grey and why. Notes from the trace are good raw material, since the renderer does not draw them.
+Each image gets a description above it, so a reader can follow the picture without decoding it: a bold title, then a short paragraph (about 3–6 sentences) that walks the highlighted route by its step numbers in the reader's own terms, says which steps the change touches (when illustrating a change), and names what is drawn in grey and why. Notes from the trace are good raw material, since the renderer does not draw them.
 
-Put the descriptions, with the images embedded, in the markdown file the caller asked for, in the form the caller specified. The example below shows the wording; the caller decides where the file goes and how images are referenced.
+Put the descriptions, with the images embedded, in the markdown file the caller asked for, in the form the caller specified. The example below shows the wording for a change; the caller decides where the file goes and how images are referenced. For a doc or tutorial, replace the heading with one that fits the document, and drop the sentence about what the change touches.
 
 ```markdown
 ## How this change runs through the code
@@ -91,7 +96,7 @@ Put the descriptions, with the images embedded, in the markdown file the caller 
 <sub>Drawn with [Trace Trail](https://github.com/realJohnDoe/tracetrail).</sub>
 ```
 
-Use this heading and the closing credit line as they are: readers do not know the term "trail image", so the heading says what the pictures show, and the credit line tells them where they come from. With several images, each gets its own bold title and description, and the credit line comes once at the end. The alt text is a one-line summary of the route, for screen readers and for when the image does not load.
+Keep the heading in a change description and the closing credit line as they are: readers do not know the term "trail image", so the heading says what the pictures show, and the credit line tells them where they come from. With several images, each gets its own bold title and description, and the credit line comes once at the end. The alt text is a one-line summary of the route, for screen readers and for when the image does not load.
 
 ## 6. Report
 

@@ -116,7 +116,7 @@ function drawPanel(panel: Panel, steps: Step[], rows: Row[], top: number, pal: P
   // tree node circles, under the route
   for (const r of rows) {
     if (nums.has(r)) continue
-    o.push(`<circle cx="${X(r)}" cy="${Y(r)}" r="3" fill="${pal.background}" stroke="${pal.neutralLine}" stroke-width="2"/>`)
+    o.push(`<circle cx="${X(r)}" cy="${Y(r)}" r="4" fill="${pal.neutralLine}"/>`)
   }
 
   // The route runs along the tree's own rails: up from p to the common ancestor, then down to q.

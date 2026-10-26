@@ -6,7 +6,7 @@ Draws a trace as a trace map: a directory tree with one highlighted interval of 
 
 ## 🌐 Web app
 
-Try it at **https://realjohndoe.github.io/tracetrail/**. Paste a trace, pick the highlight, color and theme, compare two traces side by side, and export the result as SVG or PNG. **Copy share link** gives a URL that restores the exact view, and **Copy CLI command** and **Download trace map spec** give you the same image from the [CLI](#-cli) ([ADR-0011](./docs/adr/0011-share-links-are-a-deflate-compressed-trail-spec-in-the-url-fragment.md)).
+Try it at **https://realjohndoe.github.io/tracemap/**. Paste a trace, pick the highlight, color and theme, compare two traces side by side, and export the result as SVG or PNG. **Copy share link** gives a URL that restores the exact view, and **Copy CLI command** and **Download trace map spec** give you the same image from the [CLI](#-cli) ([ADR-0011](./docs/adr/0011-share-links-are-a-deflate-compressed-trail-spec-in-the-url-fragment.md)).
 
 ## 💻 CLI
 

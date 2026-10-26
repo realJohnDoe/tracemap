@@ -4,7 +4,7 @@ A share link is the whole trace map spec (ADR-0003) as JSON, compressed with the
 
 Measured on traces of 20–200 steps, the fragment is 0.3–2.5 K characters (a single panel; two panels roughly double that). That is about 2.3× shorter than `lz-string` and costs no bundle size. `CompressionStream` is supported from Chrome 103, Firefox 113 and Safari 16.4, and produces the same bytes as Node's `zlib.deflateRawSync`, so the CLI can print share links too. Reading a link is asynchronous.
 
-Measurements are in the [research comment on #5](https://github.com/realJohnDoe/tracetrail/issues/5#issuecomment-6396330393).
+Measurements are in the [research comment on #5](https://github.com/realJohnDoe/tracemap/issues/5#issuecomment-6396330393).
 
 ## Considered Options
 

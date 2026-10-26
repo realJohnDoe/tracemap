@@ -1,6 +1,6 @@
 # Quiet neutral grey, circles under the trace line, rounded corners
 
-Decided from the prototype in #7; the exact values (hex colors, widths, radii) are in the [resolution comment on #7](https://github.com/realJohnDoe/tracetrail/issues/7#issuecomment-6396965212) and belong in core's code, not here. These are the choices that are easy to undo by accident:
+Decided from the prototype in #7; the exact values (hex colors, widths, radii) are in the [resolution comment on #7](https://github.com/realJohnDoe/tracemap/issues/7#issuecomment-6396965212) and belong in core's code, not here. These are the choices that are easy to undo by accident:
 
 - **The `gray` highlight is an ink tone**, near-black in the light theme and near-white in the dark theme, so it cannot be mistaken for neutral grey (ADR-0004, ADR-0006). Every other color passes 4.5:1 against its theme's background, which also covers the step number text on it.
 - **Neutral grey is deliberately quiet.** The trace line and the tree share one 2 px line at about 1.5:1 contrast. That line is decoration; the structure is carried by the labels, which stay readable at 4.5:1 or better.

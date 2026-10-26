@@ -6,7 +6,7 @@ Text uses the system monospace font stack and no font is embedded (ADR-0006), so
 
 PNG bytes are deterministic only for the same SVG and the same installed fonts; ADR-0003's "same trace map spec, same image" holds exactly for SVG only. Tests compare SVG (ADR-0009), not PNG bytes.
 
-Measurements are in the [research comment on #5](https://github.com/realJohnDoe/tracetrail/issues/5#issuecomment-6396330393).
+Measurements are in the [research comment on #5](https://github.com/realJohnDoe/tracemap/issues/5#issuecomment-6396330393).
 
 ## Considered Options
 

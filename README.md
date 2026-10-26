@@ -39,7 +39,7 @@ Titles default to `before` and `after` (`""` for none); both sides default to th
 
 Invalid input (unknown color, malformed or out-of-range highlight, empty trace, bad spec) prints a message to stderr and exits 1; usage errors exit 2. `tracetrail --help` lists everything with examples.
 
-## 🤖 Trail images from agents
+## 🤖 Illustrate docs and pull requests with agents
 
 Trace Trail ships two agent skills:
 

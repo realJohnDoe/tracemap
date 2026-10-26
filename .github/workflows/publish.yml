@@ -1,18 +1,15 @@
-# Continuous delivery: every push to main that changes the package publishes the next patch version
-# with npm trusted publishing (OIDC), so no token is stored. Configure the trusted publisher on
-# npmjs.com: owner realJohnDoe, repository tracemap, workflow publish.yml.
-# To release a new minor or major version, change it in packages/cli/package.json; the patch
-# number then restarts at 0.
+# Continuous delivery with semantic-release: every push to main is analysed, and a releasable
+# Conventional Commit (feat, fix, or a breaking change) publishes the next version to npm with
+# trusted publishing (OIDC, no stored token) and creates the vX.Y.Z tag and GitHub release.
+# The version is never committed: packages/cli/package.json keeps the placeholder
+# 0.0.0-development and the git tags are the source of truth.
+# Configure the trusted publisher on npmjs.com: owner realJohnDoe, repository tracemap,
+# workflow publish.yml.
 name: Publish to npm
 
 on:
   push:
     branches: [main]
-    paths:
-      - packages/**
-      - package.json
-      - package-lock.json
-      - .github/workflows/publish.yml
   workflow_dispatch:
 
 concurrency:
@@ -20,39 +17,25 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write   # tag and GitHub release
-  id-token: write   # npm trusted publishing
-
-env:
-  PACKAGE: '@realjohndoe/tracemap'
+  contents: write         # tag and GitHub release
+  issues: write           # semantic-release comments on released issues and PRs
+  pull-requests: write
+  id-token: write         # npm trusted publishing
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # semantic-release reads the tags and commit history
       - uses: actions/setup-node@v4
         with:
           node-version: 24   # npm >= 11.5.1 is required for trusted publishing
           cache: npm
-          registry-url: https://registry.npmjs.org
       - run: npm ci
       - run: npm test
       - run: npm run typecheck
-      - name: Set the next version
-        id: version
-        run: |
-          VERSION=$(node -e '
-            const base = require("./packages/cli/package.json").version.split(".").map(Number)
-            const published = process.argv[1].trim().split(".").map(Number)
-            const sameLine = published.length === 3 && published[0] === base[0] && published[1] === base[1]
-            console.log(sameLine ? `${base[0]}.${base[1]}.${published[2] + 1}` : base.join("."))
-          ' "$(npm view "$PACKAGE" version 2>/dev/null || true)")
-          npm version "$VERSION" --no-git-tag-version -w "$PACKAGE"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-      - run: npm run build -w "$PACKAGE"
-      - run: npm publish -w "$PACKAGE" --access public
-      - name: Tag and create the GitHub release
+      - run: npx semantic-release
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release create "v${{ steps.version.outputs.version }}" --target "$GITHUB_SHA" --generate-notes
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

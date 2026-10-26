@@ -2,6 +2,10 @@
 
 - When you finish work on a feature branch, always open a pull request against `main` if none exists yet for that branch. Check for an existing PR first, and use the repo's PR template if there is one.
 
+## Commits and releases
+
+Every merge to `main` is released by semantic-release from Conventional Commit messages (`feat:` is a minor, `fix:` a patch, `feat!:` or a `BREAKING CHANGE:` footer a major; `docs:`, `chore:`, `test:` and `ci:` do not release). Write PR titles in that form, since PRs are squash-merged. Never edit the version in `packages/cli/package.json`; it is a placeholder.
+
 ## Trace Map on PRs
 
 After opening a pull request here, or pushing changes to one, use the `tracemap-pr` skill (`skills/tracemap-pr/`, linked into `.claude/skills/`) to add or refresh trace maps in its description. The skill decides whether images help and how they reach the PR; if it cannot attach them, say so in your reply.

@@ -2,9 +2,9 @@
 
 - When you finish work on a feature branch, always open a pull request against `main` if none exists yet for that branch. Check for an existing PR first, and use the repo's PR template if there is one.
 
-## Trail images on PRs
+## Trace Trail on PRs
 
-After opening a pull request here, or pushing changes to one, use the `pr-trail-images` skill (`skills/pr-trail-images/`, linked into `.claude/skills/`) to add or refresh trail images in its description. The skill decides whether images help and how they reach the PR; if it cannot attach them, say so in your reply.
+After opening a pull request here, or pushing changes to one, use the `tracetrail-pr` skill (`skills/tracetrail-pr/`, linked into `.claude/skills/`) to add or refresh trail images in its description. The skill decides whether images help and how they reach the PR; if it cannot attach them, say so in your reply.
 
 ## Design docs
 

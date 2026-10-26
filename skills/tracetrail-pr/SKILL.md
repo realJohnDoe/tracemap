@@ -1,9 +1,9 @@
 ---
-name: pr-trail-images
-description: Add trail images to a pull request description, drawing the route the PR's behaviour takes through the directory tree. Use when asked to add, update or refresh trail images on a PR, or when the repo's CLAUDE.md/AGENTS.md says to use this skill on PRs. Decides whether images help and how many (1 to 5), writes trace files, renders them with `tracetrail render`, and attaches them with `gh pr edit --attach` (or, where uploads are blocked, commits them to a `tracetrail-assets` branch).
+name: tracetrail-pr
+description: Use Trace Trail to add images to a pull request description that show the route the PR's behaviour takes through the directory tree (trail images). Use when asked to add, update or refresh Trace Trail or trail images on a PR, or when the repo's CLAUDE.md/AGENTS.md says to use this skill on PRs. Decides whether images help and how many (1 to 5), writes trace files, renders them with `tracetrail render`, and attaches them with `gh pr edit --attach` (or, where uploads are blocked, commits them to a `tracetrail-assets` branch).
 ---
 
-# PR trail images
+# Trace Trail for pull requests
 
 Adds one to five trail images to a pull request description, or none when they would not help. Terms: a **trace** is an ordered list of **steps** (file or directory paths with an optional **note**), a **highlight** is the one interval of steps drawn in colour, a **trail image** is the rendered result.
 
@@ -25,7 +25,7 @@ npx tracetrail --help   # in this repo: run from the workspace root after npm in
 If `gh` is missing or older than 2.99, install the latest release (Linux or macOS, no root needed):
 
 ```sh
-sh skills/pr-trail-images/scripts/install-gh.sh
+sh skills/tracetrail-pr/scripts/install-gh.sh
 ```
 
 It installs `gh` into `~/.local/bin` and prints that path. If `~/.local/bin` is not first in `PATH`, call `~/.local/bin/gh` instead of `gh` in the steps below. If the install fails (no network to github.com, another OS), stop and report it.
@@ -113,12 +113,16 @@ Write the section in `$dir/section.md`. Image references are relative (`./trail-
 Each image gets a description above it, so a reader can follow the picture without decoding it: a bold title, then a short paragraph (about 3–6 sentences) that walks the highlighted route by its step numbers in the PR's own terms, says which steps the PR changes, and names what is drawn in grey and why. Notes from the trace are good raw material, since the renderer does not draw them.
 
 ```markdown
-## Trail images
+## How this change runs through the code
 
 **Render a trail spec.** The blue route is one `tracetrail render --spec` run. The entry point (1) hands over to `main.ts` (2), which now runs the same checks on the spec as on the flags; this is the change in this PR. Core parses each panel's trace (3) and draws the SVG (4), and `main.ts` writes it to `--output` (5). In grey: the new test, which exercises the same route.
 
 ![Route of tracetrail render --spec: the entry point, main.ts, core's trace.ts and render.ts, back to main.ts; the new test in grey](./trail-1.svg)
+
+<sub>Drawn with [Trace Trail](https://github.com/realJohnDoe/tracetrail).</sub>
 ```
+
+Use this heading and the closing credit line as they are: reviewers do not know the term "trail image", so the heading says what the pictures show, and the credit line tells them where they come from. With several images, each gets its own bold title and description, and the credit line comes once at the end.
 
 The alt text is a one-line summary of the route, for screen readers and for when the image does not load.
 
@@ -126,7 +130,7 @@ Splice the section into the current body. Keep `body.md` in `$dir`, because `gh`
 
 ```sh
 gh api repos/{owner}/{repo}/pulls/<n> --jq .body > "$dir/old-body.md"
-node skills/pr-trail-images/scripts/splice-body.mjs "$dir/section.md" < "$dir/old-body.md" > "$dir/body.md"
+node skills/tracetrail-pr/scripts/splice-body.mjs "$dir/section.md" < "$dir/old-body.md" > "$dir/body.md"
 ```
 
 `splice-body.mjs` replaces the section between `<!-- tracetrail:start -->` and `<!-- tracetrail:end -->` (each on a line of its own) or appends one at the end, so **re-running the skill on the same PR replaces the images instead of adding more**.
@@ -142,7 +146,7 @@ Pass each image to `--attach` exactly once. If `gh` exits non-zero, some uploads
 **Assets branch:**
 
 ```sh
-sh skills/pr-trail-images/scripts/push-assets.sh <n> "$dir/trail-1.svg" "$dir/trail-2.svg" > "$dir/urls.txt"
+sh skills/tracetrail-pr/scripts/push-assets.sh <n> "$dir/trail-1.svg" "$dir/trail-2.svg" > "$dir/urls.txt"
 while read -r file url; do
   sed -i.bak "s#(./$(basename "$file"))#($url)#" "$dir/body.md"
 done < "$dir/urls.txt"

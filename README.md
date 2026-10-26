@@ -58,9 +58,9 @@ Invalid input (unknown color, malformed or out-of-range highlight, empty trace, 
 
 ## PR skill
 
-`skills/pr-trail-images/` is the agent skill that adds trail images to pull request descriptions (ADR-0007, ADR-0008). It is linked into `.claude/skills/` so Claude Code sessions in this repo find it, and it calls the CLI from the workspace. It uploads images with `gh` 2.99+ (installing the latest release into `~/.local/bin` if needed). Where uploads are blocked, as in Claude Code cloud sessions, it commits them to a `tracetrail-assets` branch instead and links them by commit (ADR-0007). To have agents use it in another repo, add a sentence like this to that repo's `CLAUDE.md` or `AGENTS.md`:
+`skills/tracetrail-pr/` is the agent skill that adds trail images to pull request descriptions (ADR-0007, ADR-0008). It is linked into `.claude/skills/` so Claude Code sessions in this repo find it, and it calls the CLI from the workspace. It uploads images with `gh` 2.99+ (installing the latest release into `~/.local/bin` if needed). Where uploads are blocked, as in Claude Code cloud sessions, it commits them to a `tracetrail-assets` branch instead and links them by commit (ADR-0007). To have agents use it in another repo, add a sentence like this to that repo's `CLAUDE.md` or `AGENTS.md`:
 
-> After opening a pull request, or pushing changes to one, use the `pr-trail-images` skill to add or refresh trail images in its description.
+> After opening a pull request, or pushing changes to one, use the `tracetrail-pr` skill to add or refresh trail images in its description.
 
 ## Design
 

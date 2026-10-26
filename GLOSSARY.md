@@ -1,6 +1,6 @@
-# Trace Trail
+# Trace Map
 
-Trace Trail draws a trace as a trace map: the codebase's directory tree with the steps of one piece of behaviour highlighted, so a reader can see which files are involved and in what order. It is used from a web app and from a CLI that agents call to illustrate pull requests.
+Trace Map draws a trace as a trace map: the codebase's directory tree with the steps of one piece of behaviour highlighted, so a reader can see which files are involved and in what order. It is used from a web app and from a CLI that agents call to illustrate pull requests.
 
 ## Input
 

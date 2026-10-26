@@ -1,5 +1,5 @@
 #!/bin/sh
-# Fallback for when gh cannot upload: commits trace maps to the tracetrail-assets
+# Fallback for when gh cannot upload: commits trace maps to the tracemap-assets
 # branch under pr-<n>/, replacing that PR's earlier images, and prints one line per
 # image: "<file> <url>". The URLs name the commit, so a re-run gets new URLs and
 # GitHub's image cache never shows the old picture. Without FILEs it removes the
@@ -9,7 +9,7 @@
 # Never touches the working tree, the index or the current branch.
 set -eu
 
-BRANCH=tracetrail-assets
+BRANCH=tracemap-assets
 [ $# -ge 1 ] || { echo "usage: push-assets.sh PR_NUMBER [FILE...]" >&2; exit 2; }
 pr=$1
 shift

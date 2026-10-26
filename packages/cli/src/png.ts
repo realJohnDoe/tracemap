@@ -1,4 +1,4 @@
-import { FONT_FAMILY } from '@tracetrail/core'
+import { FONT_FAMILY } from '@tracemap/core'
 
 /** PNG width in pixels is the SVG's own width times this, for a sharper image. */
 const SCALE = 2

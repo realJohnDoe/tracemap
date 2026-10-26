@@ -1,5 +1,5 @@
 {
-  "name": "tracetrail",
+  "name": "tracemap-workspace",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -8,11 +8,11 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "npm run dev -w @tracetrail/web",
+    "dev": "npm run dev -w @tracemap/web",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "build": "npm run build -w @tracetrail/web",
-    "preview": "npm run preview -w @tracetrail/web"
+    "build": "npm run build -w @tracemap/web",
+    "preview": "npm run preview -w @tracemap/web"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

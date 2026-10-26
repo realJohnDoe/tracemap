@@ -1,6 +1,6 @@
 # PNG is rendered with resvg-js and needs an installed monospace font
 
-`--png` converts the trace map SVG with `@resvg/resvg-js`, which needs no browser. It is a regular dependency of the `trace-trail` CLI (a native addon cannot be bundled, unlike core, see ADR-0001) and is imported only when `--png` is used, so the default SVG path never loads it.
+`--png` converts the trace map SVG with `@resvg/resvg-js`, which needs no browser. It is a regular dependency of the `tracemap` CLI (a native addon cannot be bundled, unlike core, see ADR-0001) and is imported only when `--png` is used, so the default SVG path never loads it.
 
 Text uses the system monospace font stack and no font is embedded (ADR-0006), so the renderer must load system fonts. If no monospace font can be found, resvg silently draws an image without any text. Such an image is unusable, so the CLI **exits with an error** instead of writing the PNG. The error says that a monospace font must be installed (for example DejaVu Sans Mono or Liberation Mono in a bare container image). SVG output is unaffected, because the viewer picks the font.
 

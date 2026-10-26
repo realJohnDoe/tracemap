@@ -22,33 +22,33 @@ src/web/components/CartBadge.tsx         # Item count in the header updated
 /** The server-side business logic, from the service to the cart row: steps 6 to 10. */
 export const SINGLE_HIGHLIGHT: [number, number] = [6, 10]
 
-const BEFORE = `# Trace: GET /api/products/42, no caching
-src/web/pages/ProductPage.tsx            # Page asks for the product
-src/api/routes/products.ts               # Route handler getProduct() is selected
-src/api/services/product_service.ts      # getProduct() takes over
-src/api/repositories/product_repo.ts     # Query built
-src/api/db/client.ts                     # Query runs on every single request
-src/api/repositories/product_repo.ts     # Row mapped to a Product
-src/api/services/product_service.ts      # Product returned
-src/api/routes/products.ts               # 200 response built
-src/web/pages/ProductPage.tsx            # Page renders
+// The overselling fix: checking the stock and then inserting the cart row left a gap that two shoppers could both slip through.
+const AFTER = `# Trace: clicking "Add to cart", with the stock reserved atomically (overselling fix)
+# One path per line, in execution order. Text after " # " is an optional note.
+src/web/components/AddToCartButton.tsx   # Click handler fires
+src/web/hooks/useCart.ts                 # Optimistic update, POST /api/cart/items sent
+src/api/routes/cart.ts                   # Route handler addItem() is selected
+src/api/middleware/auth.ts               # Session cookie checked, user attached
+src/api/schemas/cart.ts                  # Body validated: productId, quantity
+src/api/services/cart_service.ts         # addItem() opens a transaction
+src/api/db/transaction.ts                # BEGIN, connection taken from the pool
+src/api/repositories/inventory_repo.ts   # Stock reserved in one UPDATE ... WHERE stock >= quantity
+src/api/repositories/cart_repo.ts        # Cart row inserted or quantity increased
+src/api/db/transaction.ts                # COMMIT, or ROLLBACK if the stock was gone
+src/api/services/cart_service.ts         # Updated cart returned to the route
+src/api/routes/cart.ts                   # 200 response built with the cart
+src/web/hooks/useCart.ts                 # Optimistic state replaced by the server's cart
+src/web/components/CartBadge.tsx         # Item count in the header updated
 `
 
-const AFTER = `# Trace: GET /api/products/42, with a cache in front of the database
-src/web/pages/ProductPage.tsx            # Page asks for the product
-src/api/routes/products.ts               # Route handler getProduct() is selected
-src/api/services/product_service.ts      # getProduct() takes over
-src/api/cache/redis.ts                   # Cache hit: product returned without touching the database
-src/api/services/product_service.ts      # Product returned
-src/api/routes/products.ts               # 200 response built
-src/web/pages/ProductPage.tsx            # Page renders
-`
-
-/** Compare mode: the same request before and after a cache was added (the repository and database drop out of the hot path). */
+/**
+ * Compare mode: the same "Add to cart" request before and after the overselling fix. The stock check
+ * (inventory service) and the separate product lookup give way to one transaction that reserves the stock.
+ */
 export const COMPARE_EXAMPLE = {
-  before: BEFORE,
+  before: SINGLE_EXAMPLE,
   after: AFTER,
-  // What changed: the service's work with the repository and database (3 to 7) versus with the cache (3 to 5).
-  beforeHighlight: [3, 7] as [number, number],
-  afterHighlight: [3, 5] as [number, number],
+  // The server-side business logic on both sides, like the normal-mode highlight.
+  beforeHighlight: SINGLE_HIGHLIGHT,
+  afterHighlight: [6, 10] as [number, number],
 }

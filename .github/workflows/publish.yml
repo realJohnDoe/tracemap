@@ -1,14 +1,30 @@
-# Publishes with npm trusted publishing (OIDC), so no token is stored. Configure the trusted
-# publisher on npmjs.com: owner realJohnDoe, repository tracemap, workflow publish.yml.
+# Continuous delivery: every push to main that changes the package publishes the next patch version
+# with npm trusted publishing (OIDC), so no token is stored. Configure the trusted publisher on
+# npmjs.com: owner realJohnDoe, repository tracemap, workflow publish.yml.
+# To release a new minor or major version, change it in packages/cli/package.json; the patch
+# number then restarts at 0.
 name: Publish to npm
 
 on:
-  release:
-    types: [published]
+  push:
+    branches: [main]
+    paths:
+      - packages/**
+      - package.json
+      - package-lock.json
+      - .github/workflows/publish.yml
+  workflow_dispatch:
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
 
 permissions:
-  contents: read
-  id-token: write
+  contents: write   # tag and GitHub release
+  id-token: write   # npm trusted publishing
+
+env:
+  PACKAGE: '@realjohndoe/tracemap'
 
 jobs:
   publish:
@@ -17,10 +33,26 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 24   # npm >= 11.5.1 is required for trusted publishing
           cache: npm
           registry-url: https://registry.npmjs.org
       - run: npm ci
-      - run: npm test -w @realjohndoe/tracemap
-      - run: npm run build -w @realjohndoe/tracemap
-      - run: npm publish -w @realjohndoe/tracemap --access public
+      - run: npm test
+      - run: npm run typecheck
+      - name: Set the next version
+        id: version
+        run: |
+          VERSION=$(node -e '
+            const base = require("./packages/cli/package.json").version.split(".").map(Number)
+            const published = process.argv[1].trim().split(".").map(Number)
+            const sameLine = published.length === 3 && published[0] === base[0] && published[1] === base[1]
+            console.log(sameLine ? `${base[0]}.${base[1]}.${published[2] + 1}` : base.join("."))
+          ' "$(npm view "$PACKAGE" version 2>/dev/null || true)")
+          npm version "$VERSION" --no-git-tag-version -w "$PACKAGE"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - run: npm run build -w "$PACKAGE"
+      - run: npm publish -w "$PACKAGE" --access public
+      - name: Tag and create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "v${{ steps.version.outputs.version }}" --target "$GITHUB_SHA" --generate-notes

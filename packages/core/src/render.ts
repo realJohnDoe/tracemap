@@ -116,7 +116,7 @@ function drawPanel(panel: Panel, steps: Step[], rows: Row[], top: number, pal: P
   // tree node circles, under the route
   for (const r of rows) {
     if (nums.has(r)) continue
-    o.push(`<circle cx="${X(r)}" cy="${Y(r)}" r="4" fill="${pal.neutralLine}"/>`)
+    o.push(`<circle cx="${X(r)}" cy="${Y(r)}" r="2.5" fill="${pal.neutralLine}"/>`)
   }
 
   // The route runs along the tree's own rails: up from p to the common ancestor, then down to q.
@@ -150,7 +150,7 @@ function drawPanel(panel: Panel, steps: Step[], rows: Row[], top: number, pal: P
     else grey += d
   }
   if (grey) o.push(line(grey, pal.neutralLine, 2))
-  if (hl) o.push(line(hl, color, 3.5))
+  if (hl) o.push(line(hl, color, 3))
 
   // a disc where the highlight starts, a target where it ends, a dot on every other visited row
   const start = n ? rowOf(lo) : null, end = n ? rowOf(hi) : null
@@ -158,12 +158,12 @@ function drawPanel(panel: Panel, steps: Step[], rows: Row[], top: number, pal: P
     if (!nums.has(r)) continue
     const x = X(r), y = Y(r)
     if (r === end) {
-      o.push(`<circle cx="${x}" cy="${y}" r="8" fill="${pal.background}" stroke="${color}" stroke-width="3"/>`)
-      o.push(`<circle cx="${x}" cy="${y}" r="3.5" fill="${color}"/>`)
+      o.push(`<circle cx="${x}" cy="${y}" r="5" fill="${pal.background}" stroke="${color}" stroke-width="3"/>`)
+      o.push(`<circle cx="${x}" cy="${y}" r="1.5" fill="${color}"/>`)
     } else if (r === start) {
-      o.push(`<circle cx="${x}" cy="${y}" r="7" fill="${color}" stroke="${pal.background}" stroke-width="2"/>`)
+      o.push(`<circle cx="${x}" cy="${y}" r="6" fill="${color}"/>`)
     } else {
-      o.push(`<circle cx="${x}" cy="${y}" r="4.5" fill="${color}" stroke="${pal.background}" stroke-width="1.5"/>`)
+      o.push(`<circle cx="${x}" cy="${y}" r="3.5" fill="${color}"/>`)
     }
   }
 

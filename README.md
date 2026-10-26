@@ -2,6 +2,10 @@
 
 Draws the route a trace takes through a directory tree, with one highlighted interval of steps. Built with [Vite+](https://viteplus.dev), React, TypeScript and Tailwind CSS v4.
 
+## Web app
+
+Try it at **https://realjohndoe.github.io/tracetrail/**. Paste a trace, pick the highlight, color and theme, compare two traces side by side, and export the result as SVG or PNG. **Copy share link** gives a URL that restores the exact view, and **Copy CLI command** and **Download trail spec** give you the same image from the [CLI](#cli) ([ADR-0011](./docs/adr/0011-share-links-are-a-deflate-compressed-trail-spec-in-the-url-fragment.md)). It is a static site, see [Deployment](#deployment).
+
 ## Layout
 
 An npm workspaces monorepo (see [ADR-0001](./docs/adr/0001-workspaces-with-shared-core-and-cli-only-on-npm.md)):

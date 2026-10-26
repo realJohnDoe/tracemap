@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { COLOR_NAMES, EXAMPLE, ShareError, cliCommand, decodeShareFragment, encodeShareFragment, normalizeSpec, parseTrace, renderTrail, type ColorName, type Panel, type Theme, type TrailSpec } from '@tracetrail/core'
+import { COLOR_NAMES, ShareError, cliCommand, decodeShareFragment, encodeShareFragment, normalizeSpec, parseTrace, renderTrail, type ColorName, type Panel, type Theme, type TrailSpec } from '@tracetrail/core'
+import { COMPARE_EXAMPLE, SINGLE_EXAMPLE, SINGLE_HIGHLIGHT } from './examples'
 import { download, serializeSvg, svgToPngBlob } from './lib/export'
 
 const btn = 'cursor-pointer rounded-md border border-line bg-panel px-3 py-[5px] text-[13px] text-ink hover:border-trail'
@@ -7,12 +8,6 @@ const lbl = 'flex justify-between text-[11px] uppercase tracking-[0.08em] text-m
 const val = 'font-mono text-[13px] font-semibold normal-case tracking-normal text-ink'
 const field = 'rounded-md border border-line bg-bg px-2 py-[5px] text-[13px] text-ink'
 const area = 'w-full resize-y whitespace-pre overflow-auto rounded-md border border-line bg-bg p-2.5 font-mono text-xs leading-normal text-ink'
-
-// The right side of the example comparison: the same login after a lockout counter was added.
-const EXAMPLE_AFTER = EXAMPLE.replace(
-  /^(src\/app\/security\/passwords\.py.*)$/m,
-  '$1\nsrc/app/security/lockout.py          # Failed-attempt counter reset',
-)
 
 /** One panel's controls in Compare mode; a null highlight means the whole trace. */
 interface Side {
@@ -24,8 +19,8 @@ interface Side {
 
 // Same defaults as `tracetrail compare`: titled before and after, both sides in the same color.
 const SIDES: [Side, Side] = [
-  { trace: EXAMPLE, title: 'before', color: 'blue', highlight: null },
-  { trace: EXAMPLE_AFTER, title: 'after', color: 'blue', highlight: null },
+  { trace: COMPARE_EXAMPLE.before, title: 'before', color: 'blue', highlight: COMPARE_EXAMPLE.beforeHighlight },
+  { trace: COMPARE_EXAMPLE.after, title: 'after', color: 'blue', highlight: COMPARE_EXAMPLE.afterHighlight },
 ]
 
 const toSide = (p: Panel): Side => ({ trace: p.trace, title: p.title ?? '', color: p.color ?? 'blue', highlight: p.highlight ?? null })
@@ -73,9 +68,9 @@ function SideControls({ name, side, onChange }: { name: 'Left' | 'Right'; side: 
 export default function App() {
   const [mode, setMode] = useState<'single' | 'compare'>('single')
   const [sides, setSides] = useState<[Side, Side]>(SIDES)
-  const [text, setText] = useState(EXAMPLE)
+  const [text, setText] = useState(SINGLE_EXAMPLE)
   // Trail spec fields; a null highlight means the whole trace.
-  const [highlight, setHighlight] = useState<[number, number] | null>(null)
+  const [highlight, setHighlight] = useState<[number, number] | null>(SINGLE_HIGHLIGHT)
   const [color, setColor] = useState<ColorName>('blue')
   const [title, setTitle] = useState('')
   const [theme, setTheme] = useState<Theme>('light')
@@ -357,7 +352,7 @@ export default function App() {
               f.text().then(loadText)
               e.target.value = ''
             }} />
-            <button className={btn} onClick={() => loadText(EXAMPLE)}>Reset example</button>
+            <button className={btn} onClick={() => { loadText(SINGLE_EXAMPLE); setHighlight(SINGLE_HIGHLIGHT) }}>Reset example</button>
           </div>
           </>)}
           <div className="flex flex-wrap items-center gap-2">

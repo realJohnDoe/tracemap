@@ -20,8 +20,8 @@ export interface Panel {
   highlight?: [from: number, to: number]
 }
 
-/** The complete description of one trail image (ADR-0003). */
-export interface TrailSpec {
+/** The complete description of one trace map (ADR-0003). */
+export interface TraceMapSpec {
   /** Two panels are drawn side by side on the same tree (ADR-0005). */
   panels: [Panel] | [Panel, Panel]
   /** Defaults to light. */

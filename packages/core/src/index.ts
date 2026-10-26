@@ -1,6 +1,6 @@
-export { FONT_FAMILY, renderTrail } from './render'
+export { FONT_FAMILY, renderTraceMap } from './render'
 export { COLOR_NAMES } from './spec'
-export type { ColorName, Panel, Theme, TrailSpec } from './spec'
+export type { ColorName, Panel, Theme, TraceMapSpec } from './spec'
 export { EXAMPLE, parseTrace } from './trace'
 export type { Step } from './trace'
 export { ShareError, checkSpec, cliCommand, decodeShareFragment, encodeShareFragment, normalizeSpec } from './share'

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Fallback for when gh cannot upload: commits trail images to the tracetrail-assets
+# Fallback for when gh cannot upload: commits trace maps to the tracetrail-assets
 # branch under pr-<n>/, replacing that PR's earlier images, and prints one line per
 # image: "<file> <url>". The URLs name the commit, so a re-run gets new URLs and
 # GitHub's image cache never shows the old picture. Without FILEs it removes the
@@ -27,8 +27,8 @@ esac
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 export GIT_INDEX_FILE="$tmp/index"
-message="Trail images for #$pr"
-[ $# -gt 0 ] || message="Remove trail images for #$pr"
+message="Trace maps for #$pr"
+[ $# -gt 0 ] || message="Remove trace maps for #$pr"
 
 for attempt in 1 2 3 4 5; do
   rm -f "$GIT_INDEX_FILE"

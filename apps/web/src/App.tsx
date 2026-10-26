@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Moon, Sun } from 'lucide-react'
-import { COLOR_NAMES, ShareError, cliCommand, decodeShareFragment, encodeShareFragment, normalizeSpec, parseTrace, renderTrail, type ColorName, type Panel, type Theme, type TrailSpec } from '@tracetrail/core'
+import { COLOR_NAMES, ShareError, cliCommand, decodeShareFragment, encodeShareFragment, normalizeSpec, parseTrace, renderTraceMap, type ColorName, type Panel, type Theme, type TraceMapSpec } from '@tracetrail/core'
 import { COMPARE_EXAMPLE, SINGLE_EXAMPLE, SINGLE_HIGHLIGHT } from './examples'
 import { download, serializeSvg, svgToPngBlob } from './lib/export'
 import { usePageTheme } from './lib/pageTheme'
@@ -71,7 +71,7 @@ export default function App() {
   const [mode, setMode] = useState<'single' | 'compare'>('single')
   const [sides, setSides] = useState<[Side, Side]>(SIDES)
   const [text, setText] = useState(SINGLE_EXAMPLE)
-  // Trail spec fields; a null highlight means the whole trace.
+  // Trace map spec fields; a null highlight means the whole trace.
   const [highlight, setHighlight] = useState<[number, number] | null>(SINGLE_HIGHLIGHT)
   const [color, setColor] = useState<ColorName>('blue')
   const [title, setTitle] = useState('')
@@ -91,15 +91,15 @@ export default function App() {
   const from = highlight ? clamp(highlight[0]) : 1
   const to = highlight ? clamp(highlight[1]) : Math.max(n, 1)
 
-  const spec: TrailSpec = useMemo(
+  const spec: TraceMapSpec = useMemo(
     () => mode === 'compare'
       ? { panels: [toPanel(sides[0]), toPanel(sides[1])], theme }
       : { panels: [{ trace: text, title: title || undefined, color, highlight: highlight ?? undefined }], theme },
     [mode, sides, text, title, color, highlight, theme],
   )
-  const svg = useMemo(() => renderTrail(spec), [spec])
+  const svg = useMemo(() => renderTraceMap(spec), [spec])
 
-  const applySpec = (next: TrailSpec) => {
+  const applySpec = (next: TraceMapSpec) => {
     setPlaying(false)
     setTheme(next.theme ?? 'light')
     if (next.panels.length === 2) {
@@ -196,7 +196,7 @@ export default function App() {
   const saveSvg = () => {
     const s = getSvg()
     if (!s) return
-    download('trail.svg', 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s.source))
+    download('trace-map.svg', 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s.source))
     setStatus('Export started. If nothing downloads, use Copy SVG instead.')
   }
   const savePng = async () => {
@@ -205,7 +205,7 @@ export default function App() {
     try {
       const blob = await svgToPngBlob(s.el, s.source)
       const url = URL.createObjectURL(blob)
-      download('trail.png', url)
+      download('trace-map.png', url)
       setTimeout(() => URL.revokeObjectURL(url), 1000)
       setStatus('Export started. If nothing downloads, use Copy SVG instead.')
     } catch {
@@ -240,7 +240,7 @@ export default function App() {
     download(name, `data:${type};charset=utf-8,` + encodeURIComponent(text))
     setStatus(`Export of ${name} started.`)
   }
-  const saveSpec = () => downloadText('trail.json', 'application/json', JSON.stringify(normalizeSpec(spec), null, 2) + '\n')
+  const saveSpec = () => downloadText('trace-map.json', 'application/json', JSON.stringify(normalizeSpec(spec), null, 2) + '\n')
   const saveTraces = () => {
     const names = spec.panels.length === 1 ? ['trace.trace'] : ['left.trace', 'right.trace']
     spec.panels.forEach((p, i) => setTimeout(() => downloadText(names[i], 'text/plain', p.trace), i * 200))
@@ -284,12 +284,12 @@ export default function App() {
       {shareError && <p role="alert" className="m-0 rounded-lg border border-line bg-panel px-4 py-2.5 text-[13px] text-now">{shareError}</p>}
 
       {mode === 'compare' ? (
-        <section aria-label="Trail spec" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <section aria-label="Trace map spec" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <SideControls name="Left" side={sides[0]} onChange={(l) => setSides([l, sides[1]])} />
           <SideControls name="Right" side={sides[1]} onChange={(r) => setSides([sides[0], r])} />
         </section>
       ) : (<>
-      <section aria-label="Trail spec" className="grid grid-cols-1 gap-x-6 gap-y-3.5 rounded-lg border border-line bg-panel px-4 py-3.5 sm:grid-cols-2">
+      <section aria-label="Trace map spec" className="grid grid-cols-1 gap-x-6 gap-y-3.5 rounded-lg border border-line bg-panel px-4 py-3.5 sm:grid-cols-2">
         <div className="flex min-w-0 flex-col gap-1.5">
           <label htmlFor="from" className={lbl}>
             Highlight from <b className={val}>{n ? `${from} / ${n}` : '0 / 0'}</b>
@@ -376,7 +376,7 @@ export default function App() {
           <div className="flex flex-wrap items-center gap-2">
             <button className={btn} onClick={copyLink}>Copy share link</button>
             <button className={btn} onClick={copyCommand}>Copy CLI command</button>
-            <button className={btn} onClick={saveSpec}>Download trail spec</button>
+            <button className={btn} onClick={saveSpec}>Download trace map spec</button>
             <button className={btn} onClick={saveTraces}>Download trace files</button>
           </div>
           <div className="min-h-[1.4em] text-xs text-muted" role="status">{status}</div>

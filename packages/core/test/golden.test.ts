@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vite-plus/test'
-import { COLOR_NAMES, EXAMPLE, renderTrail, type Panel, type Theme, type TrailSpec } from '../src'
+import { COLOR_NAMES, EXAMPLE, renderTraceMap, type Panel, type Theme, type TraceMapSpec } from '../src'
 
 const dir = (f: string) => fileURLToPath(new URL(`./fixtures/${f}`, import.meta.url))
 const read = (f: string) => readFileSync(dir(f), 'utf8')
@@ -9,7 +9,7 @@ const read = (f: string) => readFileSync(dir(f), 'utf8')
 // Set UPDATE_GOLDEN=1 to regenerate the committed SVG fixtures after an intended rendering change.
 const update = !!process.env.UPDATE_GOLDEN
 
-const one = (panel: Panel, theme?: Theme) => renderTrail({ panels: [panel], theme })
+const one = (panel: Panel, theme?: Theme) => renderTraceMap({ panels: [panel], theme })
 
 const cases: { name: string; panel: () => Panel; theme?: Theme }[] = [
   { name: 'no-highlight', panel: () => ({ trace: EXAMPLE }) },
@@ -23,7 +23,7 @@ const cases: { name: string; panel: () => Panel; theme?: Theme }[] = [
 ]
 
 // Comparisons: two panels side by side on one tree (ADR-0005).
-const comparisons: { name: string; spec: () => TrailSpec }[] = [
+const comparisons: { name: string; spec: () => TraceMapSpec }[] = [
   {
     name: 'compare-bug-fix',
     spec: () => ({ panels: [
@@ -47,14 +47,14 @@ const comparisons: { name: string; spec: () => TrailSpec }[] = [
   },
 ]
 
-describe('renderTrail against golden SVGs', () => {
+describe('renderTraceMap against golden SVGs', () => {
   const all = [
-    ...cases.map((c) => ({ name: c.name, spec: (): TrailSpec => ({ panels: [c.panel()], theme: c.theme }) })),
+    ...cases.map((c) => ({ name: c.name, spec: (): TraceMapSpec => ({ panels: [c.panel()], theme: c.theme }) })),
     ...comparisons,
   ]
   for (const c of all) {
     it(c.name, () => {
-      const svg = renderTrail(c.spec())
+      const svg = renderTraceMap(c.spec())
       const file = dir(`${c.name}.svg`)
       if (update) writeFileSync(file, svg + '\n')
       expect(svg + '\n').toBe(readFileSync(file, 'utf8'))
@@ -76,25 +76,25 @@ describe('renderTrail against golden SVGs', () => {
   })
 })
 
-describe('renderTrail side by side', () => {
+describe('renderTraceMap side by side', () => {
   const left = read('bug-fix-before.trace'), right = read('bug-fix-after.trace')
   const tops = (svg: string) => [...svg.matchAll(/<text x="[\d.]+" y="([\d.]+)" fill/g)].map((m) => m[1])
 
   it('draws both panels on the same tree, so every path gets a label in each', () => {
-    const svg = renderTrail({ panels: [{ trace: left }, { trace: right }] })
+    const svg = renderTraceMap({ panels: [{ trace: left }, { trace: right }] })
     for (const name of ['limits.py', 'errors.py', 'disk.py']) expect(svg.split(`>${name}<`).length - 1).toBe(2)
     const ys = tops(svg)
     expect(ys.slice(0, ys.length / 2)).toEqual(ys.slice(ys.length / 2))
   })
 
   it('keeps the rows aligned when only one panel has a title', () => {
-    const ys = tops(renderTrail({ panels: [{ trace: left, title: 'before' }, { trace: right }] }))
+    const ys = tops(renderTraceMap({ panels: [{ trace: left, title: 'before' }, { trace: right }] }))
     expect(ys.slice(0, ys.length / 2)).toEqual(ys.slice(ys.length / 2))
   })
 
   it('draws an empty side as a neutral grey tree', () => {
-    const svg = renderTrail({ panels: [{ trace: left }, { trace: '' }] })
+    const svg = renderTraceMap({ panels: [{ trace: left }, { trace: '' }] })
     expect(svg).toContain('right: no steps')
-    expect(renderTrail({ panels: [{ trace: '' }, { trace: '# none' }] })).toBe('')
+    expect(renderTraceMap({ panels: [{ trace: '' }, { trace: '# none' }] })).toBe('')
   })
 })

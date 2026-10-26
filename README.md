@@ -1,12 +1,12 @@
 # Trace Trail
 
-Draws the route a trace takes through a directory tree, with one highlighted interval of steps. Use it to show which files a piece of behaviour touches, and in what order.
+Draws a trace as a trace map: a directory tree with one highlighted interval of steps connected by a line. Use it to show which files a piece of behaviour touches, and in what order.
 
-![The Trace Trail web app showing a highlighted route through a directory tree](./docs/images/web-app.png)
+![The Trace Trail web app showing a highlighted trace line through a directory tree](./docs/images/web-app.png)
 
 ## 🌐 Web app
 
-Try it at **https://realjohndoe.github.io/tracetrail/**. Paste a trace, pick the highlight, color and theme, compare two traces side by side, and export the result as SVG or PNG. **Copy share link** gives a URL that restores the exact view, and **Copy CLI command** and **Download trail spec** give you the same image from the [CLI](#-cli) ([ADR-0011](./docs/adr/0011-share-links-are-a-deflate-compressed-trail-spec-in-the-url-fragment.md)).
+Try it at **https://realjohndoe.github.io/tracetrail/**. Paste a trace, pick the highlight, color and theme, compare two traces side by side, and export the result as SVG or PNG. **Copy share link** gives a URL that restores the exact view, and **Copy CLI command** and **Download trace map spec** give you the same image from the [CLI](#-cli) ([ADR-0011](./docs/adr/0011-share-links-are-a-deflate-compressed-trail-spec-in-the-url-fragment.md)).
 
 ## 💻 CLI
 
@@ -14,15 +14,15 @@ Try it at **https://realjohndoe.github.io/tracetrail/**. Paste a trace, pick the
 
 ```sh
 tracetrail render TRACE [--title T] [--color C] [--highlight N|A-B] [--dark-mode] [--png] -o out.svg
-tracetrail render --spec trail.json [--dark-mode] [--png] -o out.svg
+tracetrail render --spec trace-map.json [--dark-mode] [--png] -o out.svg
 ```
 
 - `TRACE`: a trace file, one step per line (`-` reads stdin).
 - `--title T`: title above the tree.
 - `--color C`: `blue` (default), `red`, `green`, `orange`, `purple` or `gray`.
 - `--highlight N|A-B`: 1-based step numbers to draw in color, e.g. `3` or `2-5`. Default: the whole trace.
-- `--spec FILE`: a trail spec as JSON (`{"panels": [{"trace": "...", "title": "...", "color": "red", "highlight": [2, 5]}]}`) instead of `TRACE` and the flags above.
-- `--dark-mode`: draw the dark theme instead of the light one ([ADR-0006](./docs/adr/0006-svg-first-system-monospace-named-colors.md)). With `--spec` it overrides the spec's `theme`. The web app has the same switch as **Dark theme**, for both single traces and comparisons, and a trail spec can set `"theme": "dark"`.
+- `--spec FILE`: a trace map spec as JSON (`{"panels": [{"trace": "...", "title": "...", "color": "red", "highlight": [2, 5]}]}`) instead of `TRACE` and the flags above.
+- `--dark-mode`: draw the dark theme instead of the light one ([ADR-0006](./docs/adr/0006-svg-first-system-monospace-named-colors.md)). With `--spec` it overrides the spec's `theme`. The web app has the same switch as **Dark theme**, for both single traces and comparisons, and a trace map spec can set `"theme": "dark"`.
 - `--png`: write a PNG instead of an SVG; an output path ending in `.png` does the same. The conversion uses `@resvg/resvg-js` and needs no browser, but it needs a monospace font installed (for example DejaVu Sans Mono or Liberation Mono in a bare container image). Without one the command exits with an error instead of writing a PNG without text ([ADR-0010](./docs/adr/0010-png-is-rendered-with-resvg-js-and-needs-an-installed-monospace-font.md)). PNG bytes depend on the installed fonts, so only SVG output is byte-for-byte reproducible.
 - `-o, --output FILE`: where to write the image (required).
 
@@ -35,7 +35,7 @@ tracetrail compare LEFT RIGHT \
   [--dark-mode] [--png] -o out.svg
 ```
 
-Titles default to `before` and `after` (`""` for none); both sides default to the same color. A trail spec with two panels renders the same image through `render --spec`. `--dark-mode` and `--png` work as for `render`. The web app's Compare mode builds the same trail spec.
+Titles default to `before` and `after` (`""` for none); both sides default to the same color. A trace map spec with two panels renders the same image through `render --spec`. `--dark-mode` and `--png` work as for `render`. The web app's Compare mode builds the same trace map spec.
 
 Invalid input (unknown color, malformed or out-of-range highlight, empty trace, bad spec) prints a message to stderr and exits 1; usage errors exit 2. `tracetrail --help` lists everything with examples.
 
@@ -43,10 +43,10 @@ Invalid input (unknown color, malformed or out-of-range highlight, empty trace, 
 
 Trace Trail ships two agent skills:
 
-- `skills/tracetrail-images/` draws trail images, with a short description each, for anything you want to explain: a README, an ADR, a tutorial, an onboarding guide, an issue or a design note. Ask an agent something like "illustrate how a request flows through the server for the docs" and it writes the images (and the text to go with them) into a directory you name.
-- `skills/tracetrail-pr/` uses it to add trail images to pull request descriptions. To have agents do this in another repo (copy both skills), add a sentence like this to that repo's `CLAUDE.md` or `AGENTS.md`:
+- `skills/tracetrail-images/` draws trace maps, with a short description each, for anything you want to explain: a README, an ADR, a tutorial, an onboarding guide, an issue or a design note. Ask an agent something like "illustrate how a request flows through the server for the docs" and it writes the images (and the text to go with them) into a directory you name.
+- `skills/tracetrail-pr/` uses it to add trace maps to pull request descriptions. To have agents do this in another repo (copy both skills), add a sentence like this to that repo's `CLAUDE.md` or `AGENTS.md`:
 
-> After opening a pull request, or pushing changes to one, use the `tracetrail-pr` skill to add or refresh trail images in its description.
+> After opening a pull request, or pushing changes to one, use the `tracetrail-pr` skill to add or refresh trace maps in its description.
 
 ## 🛠️ Contributing
 

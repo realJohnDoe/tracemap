@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Replaces the trail image section of a PR body, or appends it if there is none yet.
+// Replaces the trace map section of a PR body, or appends it if there is none yet.
 // Usage: splice-body.mjs SECTION_FILE < current-body.md > new-body.md
 // An empty SECTION_FILE removes the section.
 import { readFileSync } from 'node:fs'

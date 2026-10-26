@@ -256,7 +256,7 @@ describe('commands and specs exported by the web app', () => {
     const names = spec.panels.length === 1 ? ['trace.trace'] : ['left.trace', 'right.trace']
     spec.panels.forEach((p, i) => writeFileSync(join(dir, names[i]), p.trace))
     const words = cliCommand(spec).match(/'(?:[^']|'\\'')*'|\S+/g)!.map((w) => w.startsWith("'") ? w.slice(1, -1).replace(/'\\''/g, "'") : w)
-    const r = spawnSync(process.execPath, [bin, ...words.slice(1)], { encoding: 'utf8', cwd: dir })
+    const r = spawnSync(process.execPath, [bin, ...words.slice(2)], { encoding: 'utf8', cwd: dir })
     expect(r.status).toBe(0)
     expect(readFileSync(join(dir, 'trace-map.svg'), 'utf8')).toBe(renderTraceMap(spec) + '\n')
   })

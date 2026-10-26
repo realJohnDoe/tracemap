@@ -98,12 +98,12 @@ export async function decodeShareFragment(fragment: string): Promise<TraceMapSpe
 const quote = (s: string): string => (/^[A-Za-z0-9_./=:,@%+-]+$/.test(s) ? s : `'${s.replace(/'/g, `'\\''`)}'`)
 
 /**
- * The `tracemap render` or `tracemap compare` command that draws the same SVG as the spec,
+ * The `npx @realjohndoe/tracemap render` or `compare` command that draws the same SVG as the spec,
  * run on trace files named trace.trace (render) or left.trace and right.trace (compare).
  */
 export function cliCommand(spec: TraceMapSpec, output = 'trace-map.svg'): string {
   const { panels, theme } = normalizeSpec(spec)
-  const words: string[] = ['tracemap']
+  const words: string[] = ['npx', '@realjohndoe/tracemap']
   const add = (flag: string, value?: string) => words.push(flag, ...(value === undefined ? [] : [quote(value)]))
   const dark = () => { if (theme === 'dark') add('--dark-mode') }
 

@@ -31,15 +31,15 @@ describe('share links', () => {
 
 describe('cliCommand', () => {
   it('names only the settings that differ from the defaults', () => {
-    expect(cliCommand({ panels: [{ trace: 'a\nb' }] })).toBe('tracemap render trace.trace -o trace-map.svg')
-    expect(cliCommand(specs.single)).toBe("tracemap render trace.trace --title Auth --color green --highlight 4-9 --dark-mode -o trace-map.svg")
+    expect(cliCommand({ panels: [{ trace: 'a\nb' }] })).toBe('npx @realjohndoe/tracemap render trace.trace -o trace-map.svg')
+    expect(cliCommand(specs.single)).toBe("npx @realjohndoe/tracemap render trace.trace --title Auth --color green --highlight 4-9 --dark-mode -o trace-map.svg")
   })
 
   it('quotes titles for the shell', () => {
-    expect(cliCommand({ panels: [{ trace: 'a', title: "it's a trail" }] })).toBe(`tracemap render trace.trace --title 'it'\\''s a trail' -o trace-map.svg`)
+    expect(cliCommand({ panels: [{ trace: 'a', title: "it's a trail" }] })).toBe(`npx @realjohndoe/tracemap render trace.trace --title 'it'\\''s a trail' -o trace-map.svg`)
   })
 
   it('compares two files and keeps the before and after titles by default', () => {
-    expect(cliCommand(specs.compare)).toBe("tracemap compare left.trace right.trace --right-title '' --right-color red --right-highlight 2 -o trace-map.svg")
+    expect(cliCommand(specs.compare)).toBe("npx @realjohndoe/tracemap compare left.trace right.trace --right-title '' --right-color red --right-highlight 2 -o trace-map.svg")
   })
 })

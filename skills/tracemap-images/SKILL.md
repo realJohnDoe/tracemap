@@ -23,10 +23,10 @@ What is illustrated can be a change (a diff, a PR, a commit) or existing behavio
 ## 1. Check the tool
 
 ```sh
-npx tracemap --help   # in this repo: run from the workspace root after npm install
+npx --yes @realjohndoe/tracemap@latest --help
 ```
 
-In this repo the CLI runs from the workspace (`npx tracemap`, which resolves to `packages/cli`), not from npm. Elsewhere use `npx tracemap` once it is published. If the CLI cannot run, stop and report it.
+Always use the published CLI (`@realjohndoe/tracemap` on npm), in this repo too, so the skill works the same everywhere and needs no `npm install`. Every command below is `npx --yes @realjohndoe/tracemap@latest …`. If the CLI cannot run (for example, no network access to npm), stop and report it.
 
 ## 2. Read the change and decide
 
@@ -70,8 +70,8 @@ Guidelines:
 Run from the repo root, writing into the caller's directory, with the file names the caller asked for, in the order the images will appear:
 
 ```sh
-npx tracemap render "$scratch/flow.trace" --title "Render a trace map spec" -o "$out/trace-map-1.svg"
-npx tracemap render "$scratch/flow.trace" --title "Response" --highlight 13-17 -o "$out/trace-map-2.svg"
+npx --yes @realjohndoe/tracemap@latest render "$scratch/flow.trace" --title "Render a trace map spec" -o "$out/trace-map-1.svg"
+npx --yes @realjohndoe/tracemap@latest render "$scratch/flow.trace" --title "Response" --highlight 13-17 -o "$out/trace-map-2.svg"
 ```
 
 - `--title`: a short name for the flow or segment.

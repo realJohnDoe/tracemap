@@ -10,6 +10,8 @@ Try it at **https://realjohndoe.github.io/tracetrail/**. Paste a trace, pick the
 
 ## 💻 CLI
 
+Run it without installing: `npx @realjohndoe/tracemap render …` (the examples below write `tracemap` for the command).
+
 `render` draws a trace file as an SVG (or PNG):
 
 ```sh

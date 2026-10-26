@@ -1,8 +1,8 @@
-# Trace Trail
+# Trace Map
 
 Draws a trace as a trace map: a directory tree with one highlighted interval of steps connected by a line. Use it to show which files a piece of behaviour touches, and in what order.
 
-![The Trace Trail web app showing a highlighted trace line through a directory tree](./docs/images/web-app.png)
+![The Trace Map web app showing a highlighted trace line through a directory tree](./docs/images/web-app.png)
 
 ## 🌐 Web app
 
@@ -13,8 +13,8 @@ Try it at **https://realjohndoe.github.io/tracetrail/**. Paste a trace, pick the
 `render` draws a trace file as an SVG (or PNG):
 
 ```sh
-tracetrail render TRACE [--title T] [--color C] [--highlight N|A-B] [--dark-mode] [--png] -o out.svg
-tracetrail render --spec trace-map.json [--dark-mode] [--png] -o out.svg
+tracemap render TRACE [--title T] [--color C] [--highlight N|A-B] [--dark-mode] [--png] -o out.svg
+tracemap render --spec trace-map.json [--dark-mode] [--png] -o out.svg
 ```
 
 - `TRACE`: a trace file, one step per line (`-` reads stdin).
@@ -29,7 +29,7 @@ tracetrail render --spec trace-map.json [--dark-mode] [--png] -o out.svg
 `compare` draws two trace files as one comparison: two panels side by side on the same tree, built from the paths of both traces, so every path sits at the same height in both panels and paths only one trace visits stay neutral grey in the other:
 
 ```sh
-tracetrail compare LEFT RIGHT \
+tracemap compare LEFT RIGHT \
   [--left-title T] [--left-color C] [--left-highlight N|A-B] \
   [--right-title T] [--right-color C] [--right-highlight N|A-B] \
   [--dark-mode] [--png] -o out.svg
@@ -37,16 +37,16 @@ tracetrail compare LEFT RIGHT \
 
 Titles default to `before` and `after` (`""` for none); both sides default to the same color. A trace map spec with two panels renders the same image through `render --spec`. `--dark-mode` and `--png` work as for `render`. The web app's Compare mode builds the same trace map spec.
 
-Invalid input (unknown color, malformed or out-of-range highlight, empty trace, bad spec) prints a message to stderr and exits 1; usage errors exit 2. `tracetrail --help` lists everything with examples.
+Invalid input (unknown color, malformed or out-of-range highlight, empty trace, bad spec) prints a message to stderr and exits 1; usage errors exit 2. `tracemap --help` lists everything with examples.
 
 ## 🤖 Illustrate docs and pull requests with agents
 
-Trace Trail ships two agent skills:
+Trace Map ships two agent skills:
 
-- `skills/tracetrail-images/` draws trace maps, with a short description each, for anything you want to explain: a README, an ADR, a tutorial, an onboarding guide, an issue or a design note. Ask an agent something like "illustrate how a request flows through the server for the docs" and it writes the images (and the text to go with them) into a directory you name.
-- `skills/tracetrail-pr/` uses it to add trace maps to pull request descriptions. To have agents do this in another repo (copy both skills), add a sentence like this to that repo's `CLAUDE.md` or `AGENTS.md`:
+- `skills/tracemap-images/` draws trace maps, with a short description each, for anything you want to explain: a README, an ADR, a tutorial, an onboarding guide, an issue or a design note. Ask an agent something like "illustrate how a request flows through the server for the docs" and it writes the images (and the text to go with them) into a directory you name.
+- `skills/tracemap-pr/` uses it to add trace maps to pull request descriptions. To have agents do this in another repo (copy both skills), add a sentence like this to that repo's `CLAUDE.md` or `AGENTS.md`:
 
-> After opening a pull request, or pushing changes to one, use the `tracetrail-pr` skill to add or refresh trace maps in its description.
+> After opening a pull request, or pushing changes to one, use the `tracemap-pr` skill to add or refresh trace maps in its description.
 
 ## 🛠️ Contributing
 

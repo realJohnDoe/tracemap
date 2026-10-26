@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Moon, Sun } from 'lucide-react'
-import { COLOR_NAMES, ShareError, cliCommand, decodeShareFragment, encodeShareFragment, normalizeSpec, parseTrace, renderTraceMap, type ColorName, type Panel, type Theme, type TraceMapSpec } from '@tracetrail/core'
+import { COLOR_NAMES, ShareError, cliCommand, decodeShareFragment, encodeShareFragment, normalizeSpec, parseTrace, renderTraceMap, type ColorName, type Panel, type Theme, type TraceMapSpec } from '@tracemap/core'
 import { COMPARE_EXAMPLE, SINGLE_EXAMPLE, SINGLE_HIGHLIGHT } from './examples'
 import { download, serializeSvg, svgToPngBlob } from './lib/export'
 import { usePageTheme } from './lib/pageTheme'
@@ -19,7 +19,7 @@ interface Side {
   highlight: [number, number] | null
 }
 
-// Same defaults as `tracetrail compare`: titled before and after, both sides in the same color.
+// Same defaults as `tracemap compare`: titled before and after, both sides in the same color.
 const SIDES: [Side, Side] = [
   { trace: COMPARE_EXAMPLE.before, title: 'before', color: 'blue', highlight: COMPARE_EXAMPLE.beforeHighlight },
   { trace: COMPARE_EXAMPLE.after, title: 'after', color: 'blue', highlight: COMPARE_EXAMPLE.afterHighlight },
@@ -257,7 +257,7 @@ export default function App() {
     <div className="mx-auto flex max-w-[980px] flex-col gap-4">
       <header className="flex flex-col gap-1">
         <div className="flex items-center justify-between gap-3">
-          <h1 className="m-0 text-[22px] font-semibold tracking-tight text-balance">Trace Trail</h1>
+          <h1 className="m-0 text-[22px] font-semibold tracking-tight text-balance">Trace Map</h1>
           <button type="button" onClick={togglePageTheme}
             className="theme-fade relative grid size-9 cursor-pointer place-items-center rounded-full border border-line bg-panel text-ink hover:border-trail"
             aria-label={`Switch to ${pageTheme === 'dark' ? 'light' : 'dark'} page theme`}>

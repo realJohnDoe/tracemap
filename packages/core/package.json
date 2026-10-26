@@ -1,5 +1,5 @@
 {
-  "name": "@tracetrail/core",
+  "name": "@tracemap/core",
   "private": true,
   "version": "0.1.0",
   "type": "module",

@@ -76,7 +76,7 @@ export async function encodeShareFragment(spec: TraceMapSpec): Promise<string> {
 export async function decodeShareFragment(fragment: string): Promise<TraceMapSpec> {
   const text = fragment.replace(/^#/, '')
   if (!text.startsWith('t=')) throw new ShareError('The link does not hold a trace map spec.')
-  if (!text.startsWith(PREFIX)) throw new ShareError('The link was made by a newer version of Trace Trail that this page cannot read.')
+  if (!text.startsWith(PREFIX)) throw new ShareError('The link was made by a newer version of Trace Map that this page cannot read.')
   let json: string
   try {
     const bytes = await pipe(fromBase64Url(text.slice(PREFIX.length)), new DecompressionStream('deflate-raw'))
@@ -98,12 +98,12 @@ export async function decodeShareFragment(fragment: string): Promise<TraceMapSpe
 const quote = (s: string): string => (/^[A-Za-z0-9_./=:,@%+-]+$/.test(s) ? s : `'${s.replace(/'/g, `'\\''`)}'`)
 
 /**
- * The `tracetrail render` or `tracetrail compare` command that draws the same SVG as the spec,
+ * The `tracemap render` or `tracemap compare` command that draws the same SVG as the spec,
  * run on trace files named trace.trace (render) or left.trace and right.trace (compare).
  */
 export function cliCommand(spec: TraceMapSpec, output = 'trace-map.svg'): string {
   const { panels, theme } = normalizeSpec(spec)
-  const words: string[] = ['tracetrail']
+  const words: string[] = ['tracemap']
   const add = (flag: string, value?: string) => words.push(flag, ...(value === undefined ? [] : [quote(value)]))
   const dark = () => { if (theme === 'dark') add('--dark-mode') }
 

@@ -2,17 +2,17 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { extname } from 'node:path'
 import { Command, CommanderError } from 'commander'
 import { svgToPng } from './png'
-import { COLOR_NAMES, parseTrace, renderTraceMap, type ColorName, type Panel, type TraceMapSpec } from '@tracetrail/core'
+import { COLOR_NAMES, parseTrace, renderTraceMap, type ColorName, type Panel, type TraceMapSpec } from '@tracemap/core'
 
 const EXAMPLES = `
 Examples:
-  tracetrail render login.trace -o login.svg
-  tracetrail render login.trace --title "Authentication" --color green --highlight 4-9 -o auth.svg
-  tracetrail render --spec trace-map.json -o out.svg
-  tracetrail render login.trace --dark-mode -o login-dark.svg
-  tracetrail render login.trace --png -o login.png
-  tracetrail compare old.trace new.trace --right-highlight 2-5 -o fix.svg
-  tracetrail compare old.trace new.trace --dark-mode --png -o fix.png
+  tracemap render login.trace -o login.svg
+  tracemap render login.trace --title "Authentication" --color green --highlight 4-9 -o auth.svg
+  tracemap render --spec trace-map.json -o out.svg
+  tracemap render login.trace --dark-mode -o login-dark.svg
+  tracemap render login.trace --png -o login.png
+  tracemap compare old.trace new.trace --right-highlight 2-5 -o fix.svg
+  tracemap compare old.trace new.trace --dark-mode --png -o fix.png
 
 A trace file has one step per line, in order, naming a file or a directory (ending
 in "/"). Text after " # " is a note. Blank lines and lines starting with "#" are
@@ -169,15 +169,15 @@ async function compare(left: string, right: string, opts: CompareOptions): Promi
 }
 
 function buildProgram(): Command {
-  const program = new Command('tracetrail')
+  const program = new Command('tracemap')
     .description('Draw a trace as a trace map (the directory tree with the steps highlighted) as an SVG.')
     .exitOverride()
     .configureOutput({
       writeOut: (s) => process.stdout.write(s),
       writeErr: (s) => process.stderr.write(s),
-      outputError: (s, write) => write(`tracetrail: ${s.replace(/^error: /, '')}`),
+      outputError: (s, write) => write(`tracemap: ${s.replace(/^error: /, '')}`),
     })
-    .addHelpText('after', `${EXAMPLES}\nRun "tracetrail render --help" or "tracetrail compare --help" for every option.\n`)
+    .addHelpText('after', `${EXAMPLES}\nRun "tracemap render --help" or "tracemap compare --help" for every option.\n`)
 
   program
     .command('render')
@@ -227,7 +227,7 @@ export async function main(argv: string[]): Promise<number> {
     return 0
   } catch (e) {
     if (e instanceof CliError) {
-      process.stderr.write(`tracetrail: ${e.message}\n`)
+      process.stderr.write(`tracemap: ${e.message}\n`)
       return e.code
     }
     // Commander has already printed its own message; usage errors are 2, --help is 0.

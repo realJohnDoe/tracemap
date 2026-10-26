@@ -4,12 +4,12 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vite-plus/test'
-import { COLOR_NAMES, EXAMPLE, cliCommand, normalizeSpec, renderTraceMap, type TraceMapSpec } from '@tracetrail/core'
+import { COLOR_NAMES, EXAMPLE, cliCommand, normalizeSpec, renderTraceMap, type TraceMapSpec } from '@tracemap/core'
 
-const bin = fileURLToPath(new URL('../bin/tracetrail.js', import.meta.url))
+const bin = fileURLToPath(new URL('../bin/tracemap.js', import.meta.url))
 const fixture = (f: string) => fileURLToPath(new URL(`../../core/test/fixtures/${f}`, import.meta.url))
 const golden = (name: string) => readFileSync(fixture(`${name}.svg`), 'utf8')
-const tmp = mkdtempSync(join(tmpdir(), 'tracetrail-'))
+const tmp = mkdtempSync(join(tmpdir(), 'tracemap-'))
 
 const run = (...args: string[]) => {
   const r = spawnSync(process.execPath, [bin, ...args], { encoding: 'utf8' })
@@ -26,7 +26,7 @@ const specFile = (spec: unknown) => {
   return f
 }
 
-describe('tracetrail render against the core golden SVGs', () => {
+describe('tracemap render against the core golden SVGs', () => {
   it('draws the whole trace by default', () => {
     const o = out()
     expect(run('render', exampleFile, '-o', o).code).toBe(0)
@@ -90,7 +90,7 @@ describe('tracetrail render against the core golden SVGs', () => {
 
 const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
 
-describe('tracetrail render --png', () => {
+describe('tracemap render --png', () => {
   it('writes a PNG with --png, even to a path without the extension', () => {
     const o = join(tmp, `img${n++}`)
     const r = run('render', exampleFile, '--png', '-o', o)
@@ -112,7 +112,7 @@ describe('tracetrail render --png', () => {
   })
 })
 
-describe('tracetrail compare --dark-mode and --png', () => {
+describe('tracemap compare --dark-mode and --png', () => {
   const left = fixture('bug-fix-before.trace'), right = fixture('bug-fix-after.trace')
 
   it('draws --dark-mode like the dark golden SVG', () => {
@@ -128,7 +128,7 @@ describe('tracetrail compare --dark-mode and --png', () => {
   })
 })
 
-describe('tracetrail render errors', () => {
+describe('tracemap render errors', () => {
   const fails = (expected: RegExp, code: number, ...args: string[]) => {
     const r = run(...args)
     expect(r.code).toBe(code)
@@ -166,7 +166,7 @@ describe('tracetrail render errors', () => {
   })
 })
 
-describe('tracetrail compare against the core golden SVGs', () => {
+describe('tracemap compare against the core golden SVGs', () => {
   it('draws two panels side by side, titled before and after by default', () => {
     const o = out()
     expect(run('compare', fixture('bug-fix-before.trace'), fixture('bug-fix-after.trace'), '-o', o).code).toBe(0)
@@ -194,7 +194,7 @@ describe('tracetrail compare against the core golden SVGs', () => {
   })
 })
 
-describe('tracetrail compare errors', () => {
+describe('tracemap compare errors', () => {
   const fails = (expected: RegExp, code: number, ...args: string[]) => {
     const r = run(...args)
     expect(r.code).toBe(code)
@@ -215,7 +215,7 @@ describe('tracetrail compare errors', () => {
   })
 })
 
-describe('tracetrail --help', () => {
+describe('tracemap --help', () => {
   it('documents every flag with an example', () => {
     const r = run('render', '--help')
     expect(r.code).toBe(0)
@@ -235,13 +235,13 @@ describe('tracetrail --help', () => {
     const r = run('--help')
     expect(r.code).toBe(0)
     expect(r.stdout).toContain('Examples:')
-    expect(r.stdout).toContain('tracetrail render --help')
+    expect(r.stdout).toContain('tracemap render --help')
   })
 
   it('shows help and exits 2 without arguments', () => {
     const r = run()
     expect(r.code).toBe(2)
-    expect(r.stdout).toContain('Usage: tracetrail')
+    expect(r.stdout).toContain('Usage: tracemap')
   })
 })
 
@@ -252,7 +252,7 @@ describe('commands and specs exported by the web app', () => {
   ]
 
   it.each(specs)('the copied command draws the same SVG as the web app', (spec) => {
-    const dir = mkdtempSync(join(tmpdir(), 'tracetrail-cmd-'))
+    const dir = mkdtempSync(join(tmpdir(), 'tracemap-cmd-'))
     const names = spec.panels.length === 1 ? ['trace.trace'] : ['left.trace', 'right.trace']
     spec.panels.forEach((p, i) => writeFileSync(join(dir, names[i]), p.trace))
     const words = cliCommand(spec).match(/'(?:[^']|'\\'')*'|\S+/g)!.map((w) => w.startsWith("'") ? w.slice(1, -1).replace(/'\\''/g, "'") : w)

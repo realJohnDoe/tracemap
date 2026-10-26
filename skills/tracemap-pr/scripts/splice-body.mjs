@@ -4,8 +4,8 @@
 // An empty SECTION_FILE removes the section.
 import { readFileSync } from 'node:fs'
 
-const START = '<!-- tracetrail:start -->'
-const END = '<!-- tracetrail:end -->'
+const START = '<!-- tracemap:start -->'
+const END = '<!-- tracemap:end -->'
 
 const [sectionFile] = process.argv.slice(2)
 if (!sectionFile) {

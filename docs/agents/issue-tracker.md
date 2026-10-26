@@ -1,6 +1,6 @@
 # Issue tracker: GitHub
 
-Issues and specs for this repo live as GitHub issues in `realJohnDoe/tracetrail`. Use the `gh` CLI for all operations. In sessions without `gh` (for example Claude Code on the web), use the equivalent GitHub MCP tools (`issue_write`, `issue_read`, `list_issues`, `sub_issue_write`, …); the conventions below are the same.
+Issues and specs for this repo live as GitHub issues in `realJohnDoe/tracemap`. Use the `gh` CLI for all operations. In sessions without `gh` (for example Claude Code on the web), use the equivalent GitHub MCP tools (`issue_write`, `issue_read`, `list_issues`, `sub_issue_write`, …); the conventions below are the same.
 
 ## Conventions
 

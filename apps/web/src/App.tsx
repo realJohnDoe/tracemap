@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Moon, Sun } from 'lucide-react'
 import { COLOR_NAMES, ShareError, cliCommand, decodeShareFragment, encodeShareFragment, normalizeSpec, parseTrace, renderTrail, type ColorName, type Panel, type Theme, type TrailSpec } from '@tracetrail/core'
 import { COMPARE_EXAMPLE, SINGLE_EXAMPLE, SINGLE_HIGHLIGHT } from './examples'
 import { download, serializeSvg, svgToPngBlob } from './lib/export'
@@ -260,15 +261,10 @@ export default function App() {
           <button type="button" onClick={togglePageTheme}
             className="theme-fade relative grid size-9 cursor-pointer place-items-center rounded-full border border-line bg-panel text-ink hover:border-trail"
             aria-label={`Switch to ${pageTheme === 'dark' ? 'light' : 'dark'} page theme`}>
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
-              className={`theme-icon absolute ${pageTheme === 'dark' ? 'rotate-0 opacity-100' : '-rotate-90 opacity-0'}`}>
-              <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
-            </svg>
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
-              className={`theme-icon absolute ${pageTheme === 'dark' ? 'rotate-90 opacity-0' : 'rotate-0 opacity-100'}`}>
-              <circle cx="12" cy="12" r="4" />
-              <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-            </svg>
+            <Moon size={18} aria-hidden="true"
+              className={`theme-icon absolute ${pageTheme === 'dark' ? 'rotate-0 opacity-100' : '-rotate-90 opacity-0'}`} />
+            <Sun size={18} aria-hidden="true"
+              className={`theme-icon absolute ${pageTheme === 'dark' ? 'rotate-90 opacity-0' : 'rotate-0 opacity-100'}`} />
           </button>
         </div>
         <p className="m-0 max-w-[65ch] text-muted">

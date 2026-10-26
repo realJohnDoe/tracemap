@@ -4,7 +4,7 @@
 
 ## Commits and releases
 
-Every merge to `main` is released by semantic-release from Conventional Commit messages (`feat:` is a minor, `fix:` a patch, `feat!:` or a `BREAKING CHANGE:` footer a major; `docs:`, `chore:`, `test:` and `ci:` do not release). Write PR titles in that form, since PRs are squash-merged. Never edit the version in `packages/cli/package.json`; it is a placeholder.
+Every merge to `main` is released by semantic-release from Conventional Commit messages (`feat:` is a minor, `fix:` a patch, `feat!:` or a `BREAKING CHANGE:` footer a major; `docs:`, `chore:`, `test:` and `ci:` do not release). PRs are squash-merged, so the PR title becomes the commit message, and the `PR title` check fails any title that is not `type: subject` (or `type(scope): subject`) with one of the types above or `refactor:`, `perf:`, `build:`, `style:`, `revert:`. Set the title in that form when you open the PR (for example `docs: point links at the renamed repository`), not afterwards, and keep it up to date if the PR's purpose changes. Never edit the version in `packages/cli/package.json`; it is a placeholder.
 
 ## Trace Map on PRs
 

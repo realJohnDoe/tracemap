@@ -93,7 +93,7 @@ Put the descriptions, with the images embedded, in the markdown file the caller 
 
 ![Trace map of tracemap render --spec: the entry point, main.ts, core's trace.ts and render.ts, back to main.ts; the new test in grey](./trace-map-1.svg)
 
-<sub>Drawn with [Trace Map](https://github.com/realJohnDoe/tracetrail).</sub>
+<sub>Drawn with [Trace Map](https://github.com/realJohnDoe/tracemap).</sub>
 ```
 
 Keep the heading in a change description and the closing credit line as they are: readers do not know the term "trace map", so the heading says what the pictures show, and the credit line tells them where they come from. With several images, each gets its own bold title and description, and the credit line comes once at the end. The alt text is a one-line summary of the route, for screen readers and for when the image does not load.

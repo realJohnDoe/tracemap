@@ -1,4 +1,4 @@
-# 🌲 Trace Trail
+# Trace Trail
 
 Draws the route a trace takes through a directory tree, with one highlighted interval of steps. Use it to show which files a piece of behaviour touches, and in what order.
 

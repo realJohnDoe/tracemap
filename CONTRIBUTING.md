@@ -29,7 +29,7 @@ npm run build      # production build into apps/web/dist/
 
 After an intended rendering change, regenerate the golden SVGs with `UPDATE_GOLDEN=1 npm test` and review the diff.
 
-After `npm install`, run the workspace CLI from the repo root with `npx tracemap`. The agent skills use the published `npx --yes @realjohndoe/tracemap@latest` instead, so a skill change that needs a new CLI feature only works once that feature is released.
+After `npm install`, run the workspace CLI from the repo root with `npx tracemap`. The agent skills use the published `npx --yes @realjohndoe/tracemap@1` instead (the major is pinned; move it when a breaking release ships). Tests and local development stay on the workspace code. To change the CLI and then use the change in a skill, release the CLI change first and update the skill in a follow-up PR.
 
 ## PR skill
 

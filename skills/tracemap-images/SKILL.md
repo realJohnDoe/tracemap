@@ -23,10 +23,10 @@ What is illustrated can be a change (a diff, a PR, a commit) or existing behavio
 ## 1. Check the tool
 
 ```sh
-npx --yes @realjohndoe/tracemap@latest --help
+npx --yes @realjohndoe/tracemap@1 --help
 ```
 
-Always use the published CLI (`@realjohndoe/tracemap` on npm), in this repo too, so the skill works the same everywhere and needs no `npm install`. Every command below is `npx --yes @realjohndoe/tracemap@latest …`. If the CLI cannot run (for example, no network access to npm), stop and report it.
+Always use the published CLI (`@realjohndoe/tracemap` on npm), in this repo too, so the skill works the same everywhere and needs no `npm install`. Every command below is `npx --yes @realjohndoe/tracemap@1 …`; `@1` takes every 1.x release and never a breaking change, so move it to the next major only after checking this skill against it. If the CLI cannot run (for example, no network access to npm), stop and report it.
 
 ## 2. Read the change and decide
 
@@ -70,8 +70,8 @@ Guidelines:
 Run from the repo root, writing into the caller's directory, with the file names the caller asked for, in the order the images will appear:
 
 ```sh
-npx --yes @realjohndoe/tracemap@latest render "$scratch/flow.trace" --title "Render a trace map spec" -o "$out/trace-map-1.svg"
-npx --yes @realjohndoe/tracemap@latest render "$scratch/flow.trace" --title "Response" --highlight 13-17 -o "$out/trace-map-2.svg"
+npx --yes @realjohndoe/tracemap@1 render "$scratch/flow.trace" --title "Render a trace map spec" -o "$out/trace-map-1.svg"
+npx --yes @realjohndoe/tracemap@1 render "$scratch/flow.trace" --title "Response" --highlight 13-17 -o "$out/trace-map-2.svg"
 ```
 
 - `--title`: a short name for the flow or segment.

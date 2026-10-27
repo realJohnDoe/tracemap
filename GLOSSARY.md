@@ -4,8 +4,12 @@ Trace Map draws a trace as a trace map: the codebase's directory tree with the s
 
 ## Input
 
+**Flow**:
+The piece of behaviour a trace describes, in everyday words: "the checkout flow", "how a release gets approved". It runs through the codebase and, where it matters, through the people, devices and services around it. Use "flow" in prose, titles and descriptions, where readers do not know the word "trace"; use "trace" for the technical object that records one run of a flow.
+_Avoid_: Workflow (means a CI workflow), flowchart, data flow (all suggest a drawn diagram of boxes and branches, which a trace map is not)
+
 **Trace**:
-An ordered list of steps describing one run of behaviour through the codebase.
+An ordered list of steps that records one run of a flow through the codebase and, where relevant, beyond it.
 _Avoid_: Path list, call graph, log
 
 **Step**:

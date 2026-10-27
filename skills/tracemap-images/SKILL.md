@@ -1,6 +1,6 @@
 ---
 name: tracemap-images
-description: Use Trace Map to draw trace maps that show the steps a piece of behaviour takes through a codebase's directory tree, with a short description for each. Use when asked to illustrate how something works or what a change touches in docs, READMEs, ADRs, tutorials, issues, design notes or onboarding guides, or when another skill such as `tracemap-pr` asks for images. Decides whether images help and how many (1 to 5), writes trace files, renders them with `tracemap render`, and writes the images and their description into a directory the caller or user names.
+description: Use Trace Map to draw trace maps that show the steps a piece of behaviour takes through a codebase's directory tree, with a short description for each. Use when asked to illustrate how something works or what a change touches in docs, READMEs, ADRs, tutorials, issues, design notes or onboarding guides, or when another skill such as `tracemap-pr` asks for images. Decides whether images help and how many (1 to 5), writes trace files, renders them with `tracemap render` or `tracemap compare`, and writes the images and their description into a directory the caller or user names.
 ---
 
 # Trace maps
@@ -37,7 +37,7 @@ Read what is to be illustrated: for a change, its description and diff, wherever
 | Small change or small behaviour along one flow (a bug fix in a handler, a new option threaded through) | **1**: the whole trace highlighted |
 | Long feature or flow | **One trace, 2–5 images**, each highlighting a consecutive segment (e.g. steps 1–6 "request in", 7–12 "persistence", 13–17 "response"). Same trace file every time, so the tree is identical and the reader sees where each segment sits |
 | Several independent flows (CLI and web app both changed, a producer and a consumer) | **One image per flow**, each with its own trace |
-| Bug fix or refactor whose flow changed | Before/after comparison: **not yet available** (needs `tracemap compare`). Until then, one trace map of the new flow, or none |
+| Bug fix or refactor whose flow changed | **One comparison**: the flow before the change on the left, after it on the right, as one image with two panels side by side on the same tree. It counts as one image towards the five. If the flow is the same before and after (the fix is inside one step), it is not a comparison: draw the single flow, or nothing |
 
 **Not applicable** when the trace does not tell the reader anything: prose-only docs, plain config, dependency bumps, renames, formatting, a change confined to one file, test-only changes, or anything where every step would be the same file. Files that steer behaviour count as part of a trace even when they are not code: an agent skill that calls another skill, a workflow that runs a script, a hook. If following them gives an ordered run across several files, draw it. When the user asked for the images directly, lean towards drawing them: say if you think they add little, but do not refuse a clear request.
 
@@ -64,6 +64,10 @@ Guidelines:
 - Aim for 4–15 steps per image. Revisiting a file is fine and shows up as two step numbers.
 - To show files that matter but are not part of the flow (a new test, a fixture), append them after a comment line and leave them outside the highlight.
 - Too many steps or too wide a tree: use directories (`packages/core/src/`) instead of files.
+
+### Before and after, for a comparison
+
+Write two trace files: `before.trace` for the flow on the base branch and `after.trace` for the flow with the change. Read the old code without touching the working tree, for example with `git show <base>:path/to/file` (the base is the PR's base branch, or the commit before the change). Both traces describe the same run (the same request, the same command, the same input), at the same level of detail and with the same root conventions, so the only differences in the picture are the ones the change makes. Paths that only one side visits stay in the shared tree and appear in neutral grey on the other side, which is how a reader spots a step that was added or dropped.
 
 ### Flows that span more than one root
 
@@ -102,6 +106,17 @@ npx --yes @realjohndoe/tracemap@1 render "$scratch/flow.trace" --title "Response
 - `--highlight A-B`: for segments of one long trace.
 - `--color`: keep the default (blue) unless two images must be told apart at a glance.
 
+A comparison is one `compare` call with the before trace first:
+
+```sh
+npx --yes @realjohndoe/tracemap@1 compare "$scratch/before.trace" "$scratch/after.trace" \
+  --left-color red --right-color green -o "$out/trace-map-1.svg"
+```
+
+- Titles default to `before` and `after`; set `--left-title`/`--right-title` only when other words say more (`v1`, `v2`).
+- Colors: `--left-color red --right-color green` for a **bug fix**, where the left side is the wrong behaviour. For a **refactor**, keep the default (the same color on both sides), since neither side is wrong.
+- `--left-highlight`/`--right-highlight` only when one long flow is compared in segments; by default both whole traces are highlighted.
+
 Look at the SVGs if you can (for example a headless-browser screenshot); fix the trace and re-render if the picture is cramped or misleading.
 
 ## 5. Write the description
@@ -121,6 +136,8 @@ Put the descriptions, with the images embedded, in the markdown file the caller 
 ```
 
 Keep the heading in a change description and the closing credit line as they are: readers do not know the term "trace map", so the heading says what the pictures show, and the credit line tells them where they come from. With several images, each gets its own bold title and description, and the credit line comes once at the end. The alt text is a one-line summary of the route, for screen readers and for when the image does not load.
+
+For a comparison, the description walks the difference rather than both flows in full: where the two sides agree (by step numbers, which count separately on each side), where they part, and what the after side does instead. Say which color means what (red: before, with the bug; green: after) and point out paths that are grey on one side because only the other side visits them.
 
 ## 6. Report
 

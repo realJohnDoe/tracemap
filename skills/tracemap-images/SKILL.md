@@ -72,14 +72,13 @@ Some flows leave the repo: a released package that `npx` downloads, an external 
 - **Two groups at the top of the tree.** Prefix every repo path with the repo's name (the git remote's repository name, or the directory name) and every outside step with `external/`. The reader then sees the repo and the outside world side by side:
 
   ```text
-  tracemap/skills/tracemap-images/SKILL.md        # The skill tells the agent to run the CLI
-  external/npm-registry/@realjohndoe/tracemap/    # npx resolves the pinned 1.x release
-  external/npm-registry/@realjohndoe/tracemap/dist/tracemap.js   # The released bundle runs
-  tracemap/packages/core/src/render.ts            # Source that bundle was built from
+  tracemap/skills/tracemap-images/SKILL.md   # The skill tells the agent to run the CLI
+  external/npm-registry                      # npx downloads the pinned 1.x release and runs its bundle
+  tracemap/packages/core/src/render.ts       # Source that bundle was built from
   ```
 
-- **Name outside steps for what they are**: `external/github-api/repos/pulls`, `external/payments-service/charge`, not generic names. Use as many levels as help (a service, then the endpoint or module), and no more.
-- **Only when it matters.** Use it when the outside part has two or more steps of its own, or is the point of the image. For a single hop, put a note on the repo step instead ("calls the GitHub API"). Never draw the standard library, dependencies, the OS or the test framework as outside steps.
+- **Keep the outside flat.** One entry per outside system, directly under `external/`: `external/npm-registry`, `external/github-api`, `external/payments-service`. Put the detail (which endpoint, which version) in the note, not in extra tree levels. Go one level deeper only when the outside system's own parts are the story, and then no deeper than that. The outside part should complement the repo's flow, not compete with it for space.
+- **Only when it matters.** Use it when the flow goes out and the outside part does something the reader needs to see, such as a released package running or a service answering, or when it is the point of the image. If the repo only fires a call and nothing outside is worth following, a note on the repo step is enough ("calls the GitHub API"). Never draw the standard library, dependencies, the OS or the test framework as outside steps.
 - **All or nothing per tree.** The prefix adds a level to every path. Once any image of a set uses it, every image of that set uses it, so the trees stay the same; without outside steps, keep plain repo-relative paths and no prefix.
 - **Say so in the description.** Name what is outside the repo and what the picture cannot show about it. The tree lists siblings alphabetically, so `external/` and the repo group appear in that order, whichever step comes first.
 

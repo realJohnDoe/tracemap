@@ -12,6 +12,8 @@ Try it at **https://realjohndoe.github.io/tracemap/**. Paste a trace, pick the h
 
 Run it without installing: `npx @realjohndoe/tracemap render …` (the examples below write `tracemap` for the command).
 
+To install from GitHub instead of npmjs, use the tarball attached to each [release](https://github.com/realJohnDoe/tracemap/releases): `npm i -g https://github.com/realJohnDoe/tracemap/releases/download/vX.Y.Z/realjohndoe-tracemap-X.Y.Z.tgz`.
+
 `render` draws a trace file as an SVG (or PNG):
 
 ```sh

@@ -1,6 +1,8 @@
 # Continuous delivery with semantic-release: every push to main is analysed, and a releasable
 # Conventional Commit (feat, fix, or a breaking change) publishes the next version to npm with
 # trusted publishing (OIDC, no stored token) and creates the vX.Y.Z tag and GitHub release.
+# The packed tarball is also attached to the GitHub release, so the CLI can be installed from GitHub
+# without npmjs: npm i -g <release asset URL>.
 # The version is never committed: packages/cli/package.json keeps the placeholder
 # 0.0.0-development and the git tags are the source of truth.
 # Configure the trusted publisher on npmjs.com: owner realJohnDoe, repository tracemap,
@@ -36,6 +38,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run typecheck
+      - run: npm run build -w @realjohndoe/tracemap   # dist is gitignored; the release tarball is packed from it
       - run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

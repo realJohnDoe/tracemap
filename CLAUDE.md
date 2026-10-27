@@ -24,7 +24,7 @@ Issues live in GitHub Issues on `realJohnDoe/tracemap`. See `docs/agents/issue-t
 
 ### Triage labels
 
-Default vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+Default vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`), plus one implementer label per ticket (`Human`, `Opus`, `Sonnet`). See `docs/agents/triage-labels.md`.
 
 ### Domain docs
 

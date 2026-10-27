@@ -1,20 +1,55 @@
-# Trace Trail
+# Trace Map
 
-Follows a trace through a directory tree, step by step. Built with [Vite+](https://viteplus.dev), React, TypeScript and Tailwind CSS v4.
+Draws a trace as a trace map: a directory tree with one highlighted interval of steps connected by a line. Use it to show which files a piece of behaviour touches, and in what order.
+
+![The Trace Map web app showing a highlighted trace line through a directory tree](./docs/images/web-app.png)
+
+## 🌐 Web app
+
+Try it at **https://realjohndoe.github.io/tracemap/**. Paste a trace, pick the highlight, color and theme, compare two traces side by side, and export the result as SVG or PNG. **Copy share link** gives a URL that restores the exact view, and **Copy CLI command** and **Download trace map spec** give you the same image from the [CLI](#-cli) ([ADR-0011](./docs/adr/0011-share-links-are-a-deflate-compressed-trail-spec-in-the-url-fragment.md)).
+
+## 💻 CLI
+
+Run it without installing: `npx @realjohndoe/tracemap render …` (the examples below write `tracemap` for the command).
+
+`render` draws a trace file as an SVG (or PNG):
 
 ```sh
-npm install
-npm run dev      # local dev server (vp dev)
-npm run build    # type-check + production build into dist/
+tracemap render TRACE [--title T] [--color C] [--highlight N|A-B] [--dark-mode] [--png] -o out.svg
+tracemap render --spec trace-map.json [--dark-mode] [--png] -o out.svg
 ```
 
-## Design
+- `TRACE`: a trace file, one step per line (`-` reads stdin).
+- `--title T`: title above the tree.
+- `--color C`: `blue` (default), `red`, `green`, `orange`, `purple` or `gray`.
+- `--highlight N|A-B`: 1-based step numbers to draw in color, e.g. `3` or `2-5`. Default: the whole trace.
+- `--spec FILE`: a trace map spec as JSON (`{"panels": [{"trace": "...", "title": "...", "color": "red", "highlight": [2, 5]}]}`) instead of `TRACE` and the flags above.
+- `--dark-mode`: draw the dark theme instead of the light one ([ADR-0006](./docs/adr/0006-svg-first-system-monospace-named-colors.md)). With `--spec` it overrides the spec's `theme`. The web app has the same switch as **Dark theme**, for both single traces and comparisons, and a trace map spec can set `"theme": "dark"`.
+- `--png`: write a PNG instead of an SVG; an output path ending in `.png` does the same. The conversion uses `@resvg/resvg-js` and needs no browser, but it needs a monospace font installed (for example DejaVu Sans Mono or Liberation Mono in a bare container image). Without one the command exits with an error instead of writing a PNG without text ([ADR-0010](./docs/adr/0010-png-is-rendered-with-resvg-js-and-needs-an-installed-monospace-font.md)). PNG bytes depend on the installed fonts, so only SVG output is byte-for-byte reproducible.
+- `-o, --output FILE`: where to write the image (required).
 
-Trace Trail is growing into a web app plus a CLI (`npx trace-trail`) that agents use to add trail images to pull requests, both sharing one renderer. The vocabulary is in [GLOSSARY.md](./GLOSSARY.md) and the decisions behind the layout are in [docs/adr/](./docs/adr/).
+`compare` draws two trace files as one comparison: two panels side by side on the same tree, built from the paths of both traces, so every path sits at the same height in both panels and paths only one trace visits stay neutral grey in the other:
 
-## Deployment
+```sh
+tracemap compare LEFT RIGHT \
+  [--left-title T] [--left-color C] [--left-highlight N|A-B] \
+  [--right-title T] [--right-color C] [--right-highlight N|A-B] \
+  [--dark-mode] [--png] -o out.svg
+```
 
-Pushing to `main` runs `.github/workflows/deploy.yml`, which builds the app and publishes `dist/` to GitHub Pages.
-One-time setup: in the repo, go to **Settings → Pages** and set **Source** to **GitHub Actions**.
+Titles default to `before` and `after` (`""` for none); both sides default to the same color. A trace map spec with two panels renders the same image through `render --spec`. `--dark-mode` and `--png` work as for `render`. The web app's Compare mode builds the same trace map spec.
 
-The build uses a relative `base` (`./`), so it works under `/tracetrail/` without further configuration.
+Invalid input (unknown color, malformed or out-of-range highlight, empty trace, bad spec) prints a message to stderr and exits 1; usage errors exit 2. `tracemap --help` lists everything with examples.
+
+## 🤖 Illustrate docs and pull requests with agents
+
+Trace Map ships two agent skills:
+
+- `skills/tracemap-images/` draws trace maps, with a short description each, for anything you want to explain: a README, an ADR, a tutorial, an onboarding guide, an issue or a design note. Ask an agent something like "illustrate how a request flows through the server for the docs" and it writes the images (and the text to go with them) into a directory you name.
+- `skills/tracemap-pr/` uses it to add trace maps to pull request descriptions. To have agents do this in another repo (copy both skills), add a sentence like this to that repo's `CLAUDE.md` or `AGENTS.md`:
+
+> After opening a pull request, or pushing changes to one, use the `tracemap-pr` skill to add or refresh trace maps in its description.
+
+## 🛠️ Contributing
+
+Want to work on the code? See [CONTRIBUTING.md](./CONTRIBUTING.md). The vocabulary is in [GLOSSARY.md](./GLOSSARY.md) and the decisions behind the design are in [docs/adr/](./docs/adr/).

@@ -22,5 +22,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      # Type-checks (tsc) and builds the production bundle.
+      - run: npm run typecheck
+      # Golden-SVG tests: fail when rendering changes.
+      - run: npm test
       - run: npm run build

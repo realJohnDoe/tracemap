@@ -1,23 +1,20 @@
 @import "tailwindcss";
 
 /* Theme tokens live in CSS variables so the generated SVG can reference them directly. */
+/* Follows the OS until the user picks a side; the pick sets data-theme on <html> (see lib/pageTheme.ts). */
 :root {
-  --bg: #eef1f4;
-  --panel: #f9fafb;
-  --ink: #1b2430;
-  --muted: #5d6877;
-  --faint: #b4bcc7;
-  --line: #d5dae1;
-  --trail: #2a5bd7;
-  --now: #d9531e;
+  color-scheme: light dark;
+  --bg: light-dark(#eef1f4, #11161d);
+  --panel: light-dark(#f9fafb, #171e27);
+  --ink: light-dark(#1b2430, #dde3ea);
+  --muted: light-dark(#5d6877, #93a0b0);
+  --faint: light-dark(#b4bcc7, #3a4553);
+  --line: light-dark(#d5dae1, #2a3340);
+  --trail: light-dark(#2a5bd7, #6e9bff);
+  --now: light-dark(#d9531e, #ff8a4c);
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #11161d; --panel: #171e27; --ink: #dde3ea; --muted: #93a0b0;
-    --faint: #3a4553; --line: #2a3340; --trail: #6e9bff; --now: #ff8a4c;
-    color-scheme: dark;
-  }
-}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
 
 @theme inline {
   --color-bg: var(--bg);
@@ -40,5 +37,8 @@
     padding-right: max(16px, env(safe-area-inset-right, 0px));
   }
   input[type="range"] { @apply w-full m-0; accent-color: var(--trail); }
+  .theme-icon { transition: transform 0.25s, opacity 0.25s; }
+  body, .theme-fade { transition: background-color 0.2s, color 0.2s, border-color 0.2s; }
+  @media (prefers-reduced-motion: reduce) { body, .theme-fade, .theme-icon { transition: none; } }
   :is(button, input, textarea, summary):focus-visible { outline: 2px solid var(--trail); outline-offset: 2px; }
 }

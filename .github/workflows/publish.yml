@@ -1,0 +1,41 @@
+# Continuous delivery with semantic-release: every push to main is analysed, and a releasable
+# Conventional Commit (feat, fix, or a breaking change) publishes the next version to npm with
+# trusted publishing (OIDC, no stored token) and creates the vX.Y.Z tag and GitHub release.
+# The version is never committed: packages/cli/package.json keeps the placeholder
+# 0.0.0-development and the git tags are the source of truth.
+# Configure the trusted publisher on npmjs.com: owner realJohnDoe, repository tracemap,
+# workflow publish.yml.
+name: Publish to npm
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write         # tag and GitHub release
+  issues: write           # semantic-release comments on released issues and PRs
+  pull-requests: write
+  id-token: write         # npm trusted publishing
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # semantic-release reads the tags and commit history
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24   # npm >= 11.5.1 is required for trusted publishing
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

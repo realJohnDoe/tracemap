@@ -12,6 +12,10 @@ _Avoid_: Path list, call graph, log
 One entry of a trace: a file or directory path, optionally with a note. The same path may appear in several steps.
 _Avoid_: Hop, visit, frame
 
+**External step**:
+A step for something outside the repository that the behaviour passes through, such as a released package, an external API or another service. It is a convention of the agent skill, not a feature of the format: it is written as a path under a top-level `external/` group, with the repository's own steps under a top-level group named after the repository, so both sit in one tree.
+_Avoid_: Remote step, outside step
+
 **Note**:
 Free text attached to a step that explains what happens there.
 _Avoid_: Comment, label, description

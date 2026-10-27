@@ -45,7 +45,7 @@ When unsure between N and N+1 images, choose fewer. One clear image beats three 
 
 ## 3. Write the trace files
 
-Keep the trace files in a scratch directory outside the repo (`mktemp -d`), not in the caller's directory. A trace file has one step per line, in execution order: a repo-relative path (a directory ends in `/`; for steps outside the repo see below), then optionally ` # ` and a note. Lines starting with `#` are comments.
+Keep the trace files in a scratch directory outside the repo (`mktemp -d`), not in the caller's directory. A trace file has one step per line, in execution order: a path relative to the root, which is normally the repo root (a directory ends in `/`; for flows that go beyond the root see below), then optionally ` # ` and a note. Lines starting with `#` are comments.
 
 ```text
 # Trace: tracemap render with a trace map spec
@@ -65,11 +65,12 @@ Guidelines:
 - To show files that matter but are not part of the flow (a new test, a fixture), append them after a comment line and leave them outside the highlight.
 - Too many steps or too wide a tree: use directories (`packages/core/src/`) instead of files.
 
-### Steps outside the repo
+### Flows that span more than one root
 
-Some flows leave the repo: a released package that `npx` downloads, an external API such as GitHub's, another service. When the outside part has real complexity of its own, draw it, so the reader sees where the repo's code stops and something else takes over. This is a convention in the trace file, not a new feature: the renderer builds the tree from whatever paths it gets.
+Paths in a trace are relative to a **root**: normally the repo root, and in most cases that is all there is, so write plain root-relative paths with no prefix. Some flows go beyond it: through a second repo (a frontend calling a backend that lives in another checkout), through a directory outside the repo, or through a system that has no directory at all (a released package `npx` downloads, an external API such as GitHub's, another service). When that part does something the reader needs to see, draw it, so they see where the root's code stops and something else takes over. This is a convention in the trace file, not a new feature: the renderer builds the tree from whatever paths it gets.
 
-- **Two groups at the top of the tree.** Prefix every repo path with the repo's name (the git remote's repository name, or the directory name) and every outside step with `external/`. The reader then sees the repo and the outside world side by side:
+- **One top-level group per root.** Prefix each path with the name of its root: the repo's name for a repo (the git remote's repository name, or the directory name), the directory's name for any other directory. For a flow across repos, all of them are groups, side by side; the one the task is about comes first in the trace.
+- **Systems without a directory go under `external/`**, kept flat: one entry per system directly under it (`external/npm-registry`, `external/github-api`, `external/payments-service`). Put the detail (which endpoint, which version) in the note, not in extra tree levels. Go one level deeper only when the system's own parts are the story, and no deeper than that. The outside part should complement the main flow, not compete with it for space.
 
   ```text
   tracemap/skills/tracemap-images/SKILL.md   # The skill tells the agent to run the CLI
@@ -77,10 +78,10 @@ Some flows leave the repo: a released package that `npx` downloads, an external 
   tracemap/packages/core/src/render.ts       # Source that bundle was built from
   ```
 
-- **Keep the outside flat.** One entry per outside system, directly under `external/`: `external/npm-registry`, `external/github-api`, `external/payments-service`. Put the detail (which endpoint, which version) in the note, not in extra tree levels. Go one level deeper only when the outside system's own parts are the story, and then no deeper than that. The outside part should complement the repo's flow, not compete with it for space.
-- **Only when it matters.** Use it when the flow goes out and the outside part does something the reader needs to see, such as a released package running or a service answering, or when it is the point of the image. If the repo only fires a call and nothing outside is worth following, a note on the repo step is enough ("calls the GitHub API"). Never draw the standard library, dependencies, the OS or the test framework as outside steps.
-- **All or nothing per tree.** The prefix adds a level to every path. Once any image of a set uses it, every image of that set uses it, so the trees stay the same; without outside steps, keep plain repo-relative paths and no prefix.
-- **Say so in the description.** Name what is outside the repo and what the picture cannot show about it. The tree lists siblings alphabetically, so `external/` and the repo group appear in that order, whichever step comes first.
+  A flow across two repos looks the same, with a group per repo (`web-app/src/api/client.ts`, `billing-service/src/routes/invoices.ts`) and `external/` only for what has no directory.
+- **Only when it matters.** Use it when the flow goes out and the other part does something the reader needs to see, such as a released package running or a service answering, or when it is the point of the image. If the main root only fires a call and nothing beyond it is worth following, a note on its step is enough ("calls the GitHub API"). Never draw the standard library, dependencies, the OS or the test framework.
+- **All or nothing per set of images.** The prefix adds a level to every path. Once any image of a set uses it, every image of that set uses it, so the trees stay the same; without anything beyond the root, keep plain paths and no prefix.
+- **Say so in the description.** Name each root and what is outside any of them, and what the picture cannot show about it. The tree lists siblings alphabetically, so the groups appear in that order, whichever step comes first.
 
 ## 4. Render
 

@@ -16,9 +16,9 @@ _Avoid_: Hop, visit, frame
 The directory a trace's paths are relative to. Normally it is the repository root, and then paths are written plainly. A trace that spans several roots (more than one repository, or a directory outside the repository) puts each under a top-level group named after it. This is a convention of the agent skill, not a feature of the trace file format.
 _Avoid_: Base, workspace
 
-**External step**:
-A step for a system with no directory that the behaviour passes through, such as a released package, an external API or another service. By the same skill convention it is written as an entry under a top-level `external/` group, kept flat, next to the groups for the roots.
-_Avoid_: Remote step, outside step
+**Outside step**:
+A step for something with no path under any root that the behaviour passes through: a released package, an external API, a service the team runs, a person who approves, a lab device. By the same skill convention it is an entry under a flat top-level group named for its kind (`external/` for third-party systems, `people/`, `devices/`, `services/`, or another fitting name), next to the groups for the roots. The names are chosen freely; nothing in the trace file format knows about them.
+_Avoid_: External step (it suggests third-party only), remote step
 
 **Note**:
 Free text attached to a step that explains what happens there.

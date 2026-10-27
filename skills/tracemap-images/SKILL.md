@@ -67,10 +67,16 @@ Guidelines:
 
 ### Flows that span more than one root
 
-Paths in a trace are relative to a **root**: normally the repo root, and in most cases that is all there is, so write plain root-relative paths with no prefix. Some flows go beyond it: through a second repo (a frontend calling a backend that lives in another checkout), through a directory outside the repo, or through a system that has no directory at all (a released package `npx` downloads, an external API such as GitHub's, another service). When that part does something the reader needs to see, draw it, so they see where the root's code stops and something else takes over. This is a convention in the trace file, not a new feature: the renderer builds the tree from whatever paths it gets.
+Paths in a trace are relative to a **root**: normally the repo root, and in most cases that is all there is, so write plain root-relative paths with no prefix. Some flows go beyond it: through a second repo (a frontend calling a backend that lives in another checkout), through a directory outside the repo, or through something that has no directory at all: a released package `npx` downloads, an external API such as GitHub's, a service your team runs, a person who approves a step, a lab device. When that part does something the reader needs to see, draw it, so they see where the root's code stops and something else takes over. This is a convention in the trace file, not a new feature: the renderer builds the tree from whatever paths it gets.
 
 - **One top-level group per root.** Prefix each path with the name of its root: the repo's name for a repo (the git remote's repository name, or the directory name), the directory's name for any other directory. For a flow across repos, all of them are groups, side by side; the one the task is about comes first in the trace.
-- **Systems without a directory go under `external/`**, kept flat: one entry per system directly under it (`external/npm-registry`, `external/github-api`, `external/payments-service`). Put the detail (which endpoint, which version) in the note, not in extra tree levels. Go one level deeper only when the system's own parts are the story, and no deeper than that. The outside part should complement the main flow, not compete with it for space.
+- **Anything without a directory is an outside step, in a flat top-level group named for what it is.** One entry per thing, directly under the group, and put the detail (which endpoint, which version, what the person decides) in the note, not in extra tree levels. Name the group for its kind, and use as few groups as the flow needs, one or two:
+  - `external/` for third-party systems: `external/npm-registry`, `external/github-api`
+  - `services/` for systems your team runs that live in no repo you drew: `services/payments`
+  - `people/` for humans in the flow: `people/release-manager`, `people/on-call`
+  - `devices/` (or `lab/`) for physical equipment: `lab/plate-reader`
+
+  These names are examples, not a fixed list: choose what tells the reader what kind of thing it is, since the picture draws them like folders. Go one level deeper only when the thing's own parts are the story, and no deeper than that. The outside part should complement the main flow, not compete with it for space.
 
   ```text
   tracemap/skills/tracemap-images/SKILL.md   # The skill tells the agent to run the CLI
@@ -78,10 +84,10 @@ Paths in a trace are relative to a **root**: normally the repo root, and in most
   tracemap/packages/core/src/render.ts       # Source that bundle was built from
   ```
 
-  A flow across two repos looks the same, with a group per repo (`web-app/src/api/client.ts`, `billing-service/src/routes/invoices.ts`) and `external/` only for what has no directory.
+  A flow across two repos looks the same, with a group per repo (`web-app/src/api/client.ts`, `billing-service/src/routes/invoices.ts`) and outside steps only for what has no directory, for instance a person: `people/release-manager  # approves the deploy`.
 - **Only when it matters.** Use it when the flow goes out and the other part does something the reader needs to see, such as a released package running or a service answering, or when it is the point of the image. If the main root only fires a call and nothing beyond it is worth following, a note on its step is enough ("calls the GitHub API"). Never draw the standard library, dependencies, the OS or the test framework.
 - **All or nothing per set of images.** The prefix adds a level to every path. Once any image of a set uses it, every image of that set uses it, so the trees stay the same; without anything beyond the root, keep plain paths and no prefix.
-- **Say so in the description.** Name each root and what is outside any of them, and what the picture cannot show about it. The tree lists siblings alphabetically, so the groups appear in that order, whichever step comes first.
+- **Say so in the description.** Name each root and each outside step (including who or what it is), and what the picture cannot show about them. The tree lists siblings alphabetically, so the groups appear in that order, whichever step comes first.
 
 ## 4. Render
 

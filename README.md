@@ -48,7 +48,18 @@ Invalid input (unknown color, malformed or out-of-range highlight, empty trace, 
 Trace Map ships two agent skills:
 
 - `skills/tracemap-images/` draws trace maps, with a short description each, for anything you want to explain: a README, an ADR, a tutorial, an onboarding guide, an issue or a design note. Ask an agent something like "illustrate how a request flows through the server for the docs" and it writes the images (and the text to go with them) into a directory you name.
-- `skills/tracemap-pr/` uses it to add trace maps to pull request descriptions. To have agents do this in another repo (copy both skills), add a sentence like this to that repo's `CLAUDE.md` or `AGENTS.md`:
+- `skills/tracemap-pr/` uses it to add trace maps to pull request descriptions.
+
+In Claude Code, install both from this repo's plugin marketplace:
+
+```
+/plugin marketplace add realJohnDoe/tracemap
+/plugin install tracemap@tracemap
+```
+
+They then show up as `tracemap:tracemap-images` and `tracemap:tracemap-pr`, and `/plugin marketplace update tracemap` fetches the latest version. For other agents, copy both skill directories into the repo instead.
+
+To have agents add trace maps to pull requests in another repo, add a sentence like this to that repo's `CLAUDE.md` or `AGENTS.md`:
 
 > After opening a pull request, or pushing changes to one, use the `tracemap-pr` skill to add or refresh trace maps in its description.
 

@@ -1,0 +1,17 @@
+{
+  "name": "tracemap",
+  "description": "Trace Map agent skills: draw trace maps of how behaviour moves through a codebase and add them to docs and pull requests",
+  "owner": {
+    "name": "realJohnDoe",
+    "url": "https://github.com/realJohnDoe"
+  },
+  "plugins": [
+    {
+      "name": "tracemap",
+      "source": "./skills",
+      "description": "Draw trace maps (the steps a piece of behaviour takes through the directory tree) for docs, issues and pull request descriptions",
+      "category": "development",
+      "homepage": "https://github.com/realJohnDoe/tracemap"
+    }
+  ]
+}

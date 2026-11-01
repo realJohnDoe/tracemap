@@ -1,0 +1,14 @@
+{
+  "name": "tracemap",
+  "displayName": "Trace Map",
+  "description": "Draw trace maps (the steps a piece of behaviour takes through the directory tree) for docs, issues and pull request descriptions",
+  "author": {
+    "name": "realJohnDoe",
+    "url": "https://github.com/realJohnDoe"
+  },
+  "homepage": "https://github.com/realJohnDoe/tracemap",
+  "repository": "https://github.com/realJohnDoe/tracemap",
+  "license": "MIT",
+  "keywords": ["trace-map", "pull-requests", "documentation", "diagrams"],
+  "skills": "./"
+}

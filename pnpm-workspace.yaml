@@ -1,0 +1,16 @@
+packages:
+  - packages/*
+  - apps/*
+
+# Refuse package versions published less than 24 h ago (the pnpm 11 default,
+# stated here so Dependabot's cooldown visibly matches it).
+minimumReleaseAge: 1440
+
+# Vite+ replaces Vite for every package that depends on it.
+overrides:
+  vite: npm:@voidzero-dev/vite-plus-core@1.4.0
+
+# Packages allowed to run install-time build scripts. Add one only after
+# reviewing what its script does.
+allowBuilds:
+  esbuild: true

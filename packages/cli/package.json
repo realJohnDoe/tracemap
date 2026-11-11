@@ -22,13 +22,14 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "vp test run",
     "build": "node scripts/build.mjs",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
     "commander": "^15.0.0"
   },
   "devDependencies": {
+    "@tracemap/core": "workspace:*",
     "esbuild": "^0.28.2",
     "tsx": "^4.20.0",
     "typescript": "^7.0.2",

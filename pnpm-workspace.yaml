@@ -8,7 +8,7 @@ minimumReleaseAge: 1440
 
 # Vite+ replaces Vite for every package that depends on it.
 overrides:
-  vite: npm:@voidzero-dev/vite-plus-core@1.4.0
+  vite: npm:@voidzero-dev/vite-plus-core@1.6.0
 
 # Packages allowed to run install-time build scripts. Add one only after
 # reviewing what its script does.

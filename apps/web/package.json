@@ -11,18 +11,18 @@
   },
   "dependencies": {
     "@tracemap/core": "workspace:*",
-    "lucide-react": "^1.61.0",
+    "lucide-react": "^1.72.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.3.3",
+    "@tailwindcss/vite": "^4.3.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "@vitejs/plugin-react": "^6.1.2",
-    "tailwindcss": "^4.3.3",
+    "@vitejs/plugin-react": "^6.3.0",
+    "tailwindcss": "^4.3.5",
     "typescript": "^7.0.2",
     "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0",
-    "vite-plus": "1.4.0"
+    "vite-plus": "1.6.0"
   }
 }

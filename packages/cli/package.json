@@ -26,13 +26,13 @@
   },
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
-    "commander": "^15.0.0"
+    "commander": "^15.1.0"
   },
   "devDependencies": {
     "@tracemap/core": "workspace:*",
     "esbuild": "^0.28.2",
     "tsx": "^4.20.0",
     "typescript": "^7.0.2",
-    "vite-plus": "1.4.0"
+    "vite-plus": "1.6.0"
   }
 }

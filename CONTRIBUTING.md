@@ -8,10 +8,10 @@ Read [GLOSSARY.md](./GLOSSARY.md) and the ADRs in [docs/adr/](./docs/adr/) befor
 
 ## Layout
 
-An npm workspaces monorepo (see [ADR-0001](./docs/adr/0001-workspaces-with-shared-core-and-cli-only-on-npm.md)), built with [Vite+](https://viteplus.dev), React, TypeScript and Tailwind CSS v4:
+A pnpm workspace monorepo (see [ADR-0001](./docs/adr/0001-workspaces-with-shared-core-and-cli-only-on-npm.md) and [ADR-0014](./docs/adr/0014-pnpm-replaces-npm-for-development.md)), built with [Vite+](https://viteplus.dev), React, TypeScript and Tailwind CSS v4:
 
 - `packages/core`: private `@tracemap/core`. Parsing, tree layout and SVG rendering, with no DOM dependency. Its public interface is the trace map spec type and `renderTraceMap`, which takes a trace map spec and returns SVG; it is tested against golden SVG fixtures in `packages/core/test/fixtures/`.
-- `packages/cli`: the `tracemap` command, published to npm as `@realjohndoe/tracemap` with core bundled in (`npm run build -w @realjohndoe/tracemap` bundles it into `dist/`). In the workspace it runs from the TypeScript sources without a build step, so `packages/cli/bin/tracemap.js` is the entry point for tests.
+- `packages/cli`: the `tracemap` command, published to npm as `@realjohndoe/tracemap` with core bundled in (`pnpm --filter @realjohndoe/tracemap run build` bundles it into `dist/`). In the workspace it runs from the TypeScript sources without a build step, so `packages/cli/bin/tracemap.js` is the entry point for tests.
 - `apps/web`: the React web app. Browser-only helpers (SVG/PNG export, clipboard) live here.
 - `skills/`: agent skills, see [PR skill](#pr-skill).
 
@@ -20,16 +20,16 @@ An npm workspaces monorepo (see [ADR-0001](./docs/adr/0001-workspaces-with-share
 Run from the repo root:
 
 ```sh
-npm install
-npm run dev        # web app dev server (vp dev)
-npm run typecheck  # tsc in every workspace
-npm test           # golden-SVG tests (vp test)
-npm run build      # production build into apps/web/dist/
+pnpm install
+pnpm run dev        # web app dev server (vp dev)
+pnpm run typecheck  # tsc in every workspace
+pnpm test           # golden-SVG tests (vp test)
+pnpm run build      # production build into apps/web/dist/
 ```
 
-After an intended rendering change, regenerate the golden SVGs with `UPDATE_GOLDEN=1 npm test` and review the diff.
+After an intended rendering change, regenerate the golden SVGs with `UPDATE_GOLDEN=1 pnpm test` and review the diff.
 
-After `npm install`, run the workspace CLI from the repo root with `npx tracemap`. The agent skills use the published `npx --yes @realjohndoe/tracemap@1` instead (the major is pinned; move it when a breaking release ships). Tests and local development stay on the workspace code. To change the CLI and then use the change in a skill, release the CLI change first and update the skill in a follow-up PR.
+After `pnpm install`, run the workspace CLI from the repo root with `pnpm exec tracemap`. The agent skills use the published `npx --yes @realjohndoe/tracemap@1` instead (the major is pinned; move it when a breaking release ships). Tests and local development stay on the workspace code. To change the CLI and then use the change in a skill, release the CLI change first and update the skill in a follow-up PR.
 
 ## PR skill
 

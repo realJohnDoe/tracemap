@@ -3,23 +3,18 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "workspaces": [
-    "packages/*",
-    "apps/*"
-  ],
   "scripts": {
-    "dev": "npm run dev -w @tracemap/web",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
-    "build": "npm run build -w @tracemap/web",
-    "preview": "npm run preview -w @tracemap/web"
+    "dev": "pnpm --filter @tracemap/web dev",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "build": "pnpm --filter @tracemap/web build",
+    "preview": "pnpm --filter @tracemap/web preview"
   },
   "devDependencies": {
+    "@realjohndoe/tracemap": "workspace:*",
     "@types/node": "^22.0.0",
     "semantic-release": "^25.0.9",
     "vite-plus": "1.4.0"
   },
-  "overrides": {
-    "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0"
-  }
+  "packageManager": "pnpm@11.3.0"
 }

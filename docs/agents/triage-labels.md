@@ -16,12 +16,13 @@ Edit the "Label in our tracker" column to match whatever vocabulary you actually
 
 ## Implementer labels
 
-Every ticket also carries exactly one label saying who should pick it up:
+Every ticket also carries exactly one label saying who should pick it up. These are the [workshop](https://github.com/realJohnDoe/agent-skills)'s labels: it dispatches every unblocked `haiku`, `sonnet` or `opus` ticket to an agent session.
 
-| Label    | Meaning                                                                  |
-| -------- | ------------------------------------------------------------------------ |
-| `Human`  | Needs a human decision or human-only access (accounts, secrets, taste)   |
-| `Opus`   | Agent-ready, but design-heavy or needs judgement: use the stronger model |
-| `Sonnet` | Agent-ready and well specified: mechanical or follows settled decisions  |
+| Label               | Meaning                                                                    |
+| ------------------- | -------------------------------------------------------------------------- |
+| `decision-required` | Needs a human decision or human-only access (accounts, secrets, taste)     |
+| `opus`              | Agent-ready, but design-heavy or needs judgement: use the strongest model  |
+| `sonnet`            | Agent-ready and well specified: mechanical or follows settled decisions    |
+| `haiku`             | Agent-ready and trivial: a one-line or purely mechanical change            |
 
-`Human` tickets also get `ready-for-human`; `Opus` and `Sonnet` tickets get `ready-for-agent`.
+`decision-required` tickets also get `ready-for-human`; `opus`, `sonnet` and `haiku` tickets get `ready-for-agent`.

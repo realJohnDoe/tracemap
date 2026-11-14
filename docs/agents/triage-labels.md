@@ -16,7 +16,7 @@ Edit the "Label in our tracker" column to match whatever vocabulary you actually
 
 ## Implementer labels
 
-Every ticket also carries exactly one label saying who should pick it up. These are the [workshop](https://github.com/realJohnDoe/agent-skills)'s labels: it dispatches every unblocked `haiku`, `sonnet` or `opus` ticket to an agent session.
+Every ticket also carries exactly one label saying who should pick it up. These are the [workshop](https://github.com/realJohnDoe/agent-skills)'s labels: it dispatches every unblocked `haiku`, `sonnet` or `opus` ticket that also has `ready-for-agent` to an agent session.
 
 | Label               | Meaning                                                                    |
 | ------------------- | -------------------------------------------------------------------------- |
@@ -25,4 +25,4 @@ Every ticket also carries exactly one label saying who should pick it up. These 
 | `sonnet`            | Agent-ready and well specified: mechanical or follows settled decisions    |
 | `haiku`             | Agent-ready and trivial: a one-line or purely mechanical change            |
 
-`decision-required` tickets also get `ready-for-human`; `opus`, `sonnet` and `haiku` tickets get `ready-for-agent`.
+`decision-required` tickets also get `ready-for-human`. `ready-for-agent` is the maintainer's go-ahead: agents never add it, so a ticket an agent files with `opus`, `sonnet` or `haiku` gets `needs-triage` instead and waits under the workshop digest's Triage until the maintainer approves it.

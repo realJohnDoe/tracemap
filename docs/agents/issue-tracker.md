@@ -4,7 +4,7 @@ Issues and specs for this repo live as GitHub issues in `realJohnDoe/tracemap`. 
 
 ## Conventions
 
-Label, order and structure every issue as the workshop plugin's `issue-conventions` skill says, which also covers blocked-by edges and sub-issues. Everything else is plain `gh issue …`, run inside the clone so `gh` infers the repo.
+Label, order and structure every issue as the workshop plugin's `conventions` skill says, which also covers blocked-by edges and sub-issues. Everything else is plain `gh issue …`, run inside the clone so `gh` infers the repo.
 
 ## Pull requests as a triage surface
 

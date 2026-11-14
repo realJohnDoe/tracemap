@@ -18,7 +18,7 @@ Issues live in GitHub Issues on `realJohnDoe/tracemap`. See `docs/agents/issue-t
 
 ### Triage labels
 
-Before creating, labelling or ordering an issue, or opening a PR, follow the workshop plugin's `issue-conventions` skill: it covers when to open a PR and adding trace maps to it with `tracemap-pr` (here, the working copy in `skills/tracemap-pr/`, linked into `.claude/skills/`). This repo's extra triage labels are in `docs/agents/triage-labels.md`.
+Before creating, labelling or ordering an issue, or opening a PR, follow the workshop plugin's `conventions` skill: it covers when to open a PR and adding trace maps to it with `tracemap-pr` (here, the working copy in `skills/tracemap-pr/`, linked into `.claude/skills/`). This repo's extra triage labels are in `docs/agents/triage-labels.md`.
 
 ### Domain docs
 

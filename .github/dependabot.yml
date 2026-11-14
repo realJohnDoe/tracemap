@@ -12,9 +12,10 @@ updates:
       prefix: build
       include: scope
     ignore:
-      # vite-plus and the `vite` override in pnpm-workspace.yaml (vite-plus-core)
-      # must move together, and Dependabot can't edit the override. Bump both by
-      # hand, then run pnpm install.
+      # vite-plus, the `vite` override in pnpm-workspace.yaml (vite-plus-core)
+      # and apps/web's `vite` devDependency must move together, and Dependabot
+      # can't edit the override. Bump all three by hand (root and apps/web
+      # package.json, pnpm-workspace.yaml), then run pnpm install.
       - dependency-name: vite-plus
       - dependency-name: "@voidzero-dev/vite-plus-core"
     groups:

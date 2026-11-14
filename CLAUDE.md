@@ -1,14 +1,8 @@
 # CLAUDE.md
 
-- When you finish work on a feature branch, always open a pull request against `main` if none exists yet for that branch. Check for an existing PR first, and use the repo's PR template if there is one.
-
 ## Commits and releases
 
 Every merge to `main` is released by semantic-release from Conventional Commit messages (`feat:` is a minor, `fix:` a patch, `feat!:` or a `BREAKING CHANGE:` footer a major; `docs:`, `chore:`, `test:` and `ci:` do not release). PRs are squash-merged, so the PR title becomes the commit message, and the `PR title` check fails any title that is not `type: subject` (or `type(scope): subject`) with one of the types above or `refactor:`, `perf:`, `build:`, `style:`, `revert:`. Set the title in that form when you open the PR (for example `docs: point links at the renamed repository`), not afterwards, and keep it up to date if the PR's purpose changes. Never edit the version in `packages/cli/package.json`; it is a placeholder.
-
-## Trace Map on PRs
-
-After opening a pull request here, or pushing changes to one, use the `tracemap-pr` skill (`skills/tracemap-pr/`, linked into `.claude/skills/`) to add or refresh trace maps in its description. The skill decides whether images help and how they reach the PR; if it cannot attach them, say so in your reply.
 
 ## Design docs
 
@@ -24,7 +18,7 @@ Issues live in GitHub Issues on `realJohnDoe/tracemap`. See `docs/agents/issue-t
 
 ### Triage labels
 
-Before creating or labelling an issue, or opening a PR, follow the workshop plugin's `issue-conventions` skill. This repo's extra triage labels are in `docs/agents/triage-labels.md`.
+Before creating, labelling or ordering an issue, or opening a PR, follow the workshop plugin's `issue-conventions` skill: it covers when to open a PR and adding trace maps to it with `tracemap-pr` (here, the working copy in `skills/tracemap-pr/`, linked into `.claude/skills/`). This repo's extra triage labels are in `docs/agents/triage-labels.md`.
 
 ### Domain docs
 

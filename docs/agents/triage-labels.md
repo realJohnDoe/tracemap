@@ -1,6 +1,6 @@
 # Triage Labels
 
-The workshop's labels (model tiers, `ready-for-agent`, `deferred`, `automerge`) and the `## Decision needed` section follow the `issue-conventions` skill of the [workshop plugin](https://github.com/realJohnDoe/agent-skills/blob/main/skills/issue-conventions/SKILL.md). This repo also keeps the default triage vocabulary of mattpocock/skills as real labels:
+The workshop's labels (model tiers, `ready-for-agent`, `deferred`, `automerge`) and the `## Decision needed` section follow the `conventions` skill of the [workshop plugin](https://github.com/realJohnDoe/agent-skills/blob/main/skills/conventions/SKILL.md). This repo also keeps the default triage vocabulary of mattpocock/skills as real labels:
 
 | Label in mattpocock/skills | Label in our tracker | Meaning                                                                 |
 | -------------------------- | -------------------- | ----------------------------------------------------------------------- |

@@ -24,7 +24,7 @@ Issues live in GitHub Issues on `realJohnDoe/tracemap`. See `docs/agents/issue-t
 
 ### Triage labels
 
-Default vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`), plus one implementer label per ticket (`decision-required`, `opus`, `sonnet`, `haiku`). See `docs/agents/triage-labels.md`.
+Default vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`), plus one implementer label per ticket (`opus`, `sonnet`, `haiku`, or `ready-for-human` for human-only work). A decision the maintainer must make goes in a `## Decision needed` section of the ticket body, not a label. See `docs/agents/triage-labels.md`.
 
 ### Domain docs
 

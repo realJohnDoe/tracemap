@@ -1,5 +1,7 @@
 # Trace Map
 
+![Trace Map](./docs/images/banner.jpg)
+
 Draws a trace as a trace map: a directory tree with one highlighted interval of steps connected by a line. Use it to show which files a piece of behaviour touches, and in what order.
 
 ![The Trace Map web app showing a highlighted trace line through a directory tree](./docs/images/web-app.png)

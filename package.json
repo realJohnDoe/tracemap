@@ -16,5 +16,5 @@
     "semantic-release": "^26.0.1",
     "vite-plus": "1.6.0"
   },
-  "packageManager": "pnpm@11.3.0"
+  "packageManager": "pnpm@12.21.0"
 }

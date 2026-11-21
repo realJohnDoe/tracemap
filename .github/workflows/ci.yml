@@ -1,19 +1,26 @@
 name: CI
 
 on:
-  pull_request:
   push:
     branches: [main]
+  pull_request:
+    types: [opened, reopened, synchronize, labeled, unlabeled, closed]
+  workflow_dispatch:
 
+# Only superseded PR runs are cancelled; a push to main must run its production deploy to the end.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
 
 jobs:
   build:
+    # closed/unlabeled only need the removal in `pages`; another label (e.g. automerge) builds nothing.
+    if: >-
+      github.event.action != 'closed' && github.event.action != 'unlabeled' &&
+      (github.event.action != 'labeled' || github.event.label.name == 'preview')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -26,4 +33,20 @@ jobs:
       - run: pnpm run typecheck
       # Golden-SVG tests: fail when rendering changes.
       - run: pnpm test
+      # The build uses a relative base, so it works from any subfolder.
       - run: pnpm run build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: site
+          path: apps/web/dist
+          include-hidden-files: true
+  # Production deploy, PR preview and its removal; see the dispatcher skill in agent-skills.
+  pages:
+    needs: build
+    if: ${{ !cancelled() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
+    uses: realJohnDoe/agent-skills/.github/workflows/pages.yml@main
+    with:
+      artifact: site
+    permissions:
+      contents: write
+      pull-requests: write

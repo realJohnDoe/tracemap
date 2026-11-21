@@ -2,8 +2,8 @@ packages:
   - packages/*
   - apps/*
 
-# Refuse package versions published less than 24 h ago (the pnpm 11 default,
-# stated here so Dependabot's cooldown visibly matches it).
+# Refuse package versions published less than 24 h ago (stated here so
+# Dependabot's cooldown visibly matches it).
 minimumReleaseAge: 1440
 
 # Vite+ replaces Vite for every package that depends on it.

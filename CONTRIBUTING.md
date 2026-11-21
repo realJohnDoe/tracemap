@@ -37,7 +37,7 @@ Two agent skills add trace maps to pull request descriptions (ADR-0007, ADR-0008
 
 ## Deployment
 
-Pushing to `main` runs `.github/workflows/deploy.yml`, which builds the app and publishes `apps/web/dist/` to GitHub Pages.
+Pushing to `main` runs `.github/workflows/ci.yml`, which builds the app and, through the shared Pages workflow, publishes `apps/web/dist/` to GitHub Pages. A PR labelled `preview` gets a preview under `pr-preview/pr-<N>/`.
 One-time setup: in the repo, go to **Settings → Pages** and set **Source** to **GitHub Actions**.
 
 The build uses a relative `base` (`./`), so it works under `/tracemap/` without further configuration.

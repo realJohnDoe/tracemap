@@ -40,11 +40,11 @@ jobs:
           name: site
           path: apps/web/dist
           include-hidden-files: true
-  # Production deploy, PR preview and its removal; see the dispatcher skill in agent-skills.
+  # Production deploy, PR preview and its removal; see the dispatcher skill in joes-workshop.
   pages:
     needs: build
     if: ${{ !cancelled() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
-    uses: realJohnDoe/agent-skills/.github/workflows/pages.yml@main
+    uses: realJohnDoe/joes-workshop/.github/workflows/pages.yml@main
     with:
       artifact: site
     permissions:
